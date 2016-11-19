@@ -1,18 +1,20 @@
 package com.winetraces.nortoncosecha;
 
+import android.app.Dialog;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.media.AudioManager;
-import android.media.ToneGenerator;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import java.io.InputStream;
 import java.util.Calendar;
 
@@ -171,7 +173,7 @@ public class Programa extends AppCompatActivity {
                 case Variables.KEYCODE_UNITECH_SEARCH:
                     return true;
                 case KeyEvent.KEYCODE_BACK:
-                    keybeep();
+                    Library.keybeep();
                     onBackPressed();
                     return false;
                 case Variables.KEYCODE_UNITECH_MENU:
@@ -200,7 +202,7 @@ public class Programa extends AppCompatActivity {
         else
             ProgInx--;
         pantalla();
-        keybeep();
+        Library.keybeep();
     }
 
     public void buttonRightClick(View target)
@@ -210,15 +212,36 @@ public class Programa extends AppCompatActivity {
         else
             ProgInx = 0;
         pantalla();
-        keybeep();
+        Library.keybeep();
     }
 
     public void seleccionarClick(View target)
     {
         byte datos[]=new byte[10];
 
-        //ToDo error cierre bin/pallet antes de cambiar el programa
-        keybeep();
+        Library.keybeep();
+        if (Variables.TachoCajaCnt != 0)
+        {
+            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            alertDialog.setTitle("Atención");
+            alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+            alertDialog.setMessage("Debe cerrar el bin para cambiar el programa");
+            alertDialog.setButton(Dialog.BUTTON_NEGATIVE, "Aceptar", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int wich) {
+                    Library.keybeep();
+                    dialog.cancel();
+                    mBackground.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    );
+                }
+            });
+            alertDialog.setCancelable(false);
+            alertDialog.show();
+            Button b = alertDialog.getButton(Dialog.BUTTON_NEGATIVE);
+            b.setBackgroundColor(Color.LTGRAY);
+            return;
+        }
         try {
             if ((ProgAct != ProgInx) || !Variables.ProgSel)
             {
@@ -288,20 +311,6 @@ public class Programa extends AppCompatActivity {
             onBackPressed();
         } catch (Exception e) { }
     }
-
-    public void keybeep()
-    {
-        ToneGenerator tone = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
-        tone.startTone(ToneGenerator.TONE_PROP_BEEP);
-        try {
-            Thread.sleep(200);
-        }catch (InterruptedException e)
-        {
-            return;
-        }
-        tone.release();
-    }
-
 
     @Override
     protected void onResume() {

@@ -7,32 +7,200 @@
     android:background="#0099cc"
     tools:context="com.winetraces.nortoncosecha.Menu">
 
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srcCompat="@drawable/image"
+        android:layout_alignParentTop="true"
+        android:id="@+id/menuMain"
+        android:layout_alignParentStart="true" />
+
     <TextClock
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textClock"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:layout_marginTop="68dp"
-        android:layout_marginEnd="16dp"
+        android:textSize="25sp"
+        android:layout_marginTop="55dp"
+        android:layout_marginStart="270dp"
         android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true" />
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:srcCompat="@drawable/menu_main"
-        android:layout_alignParentTop="true"
-        android:id="@+id/menuMain"
         android:layout_alignParentStart="true" />
 
     <Button
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:id="@+id/button2"
-        android:layout_marginStart="22dp"
-        android:layout_marginTop="123dp"
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_vendimia"
         android:background="@android:color/transparent"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="142dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_presentismo"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="270dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_inicializar"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="395dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_reportes"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="142dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_descarga"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="270dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_Configurar"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="395dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_About"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="517dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_t_cosechador"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="222dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_t_vehiculo"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="347dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_t_recipiente"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="222dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_r_cosechador"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="222dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_r_presentismo"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="347dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_r_cuadrilla"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="222dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_r_remito"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="347dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_d_red"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="222dp"
+        />
+
+    <Button
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:id="@+id/b_d_sd"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="222dp"
+        />
 
 </RelativeLayout>

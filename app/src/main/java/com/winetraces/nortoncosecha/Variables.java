@@ -60,6 +60,7 @@ public class Variables {
     private boolean error;
     public static int csCount;
 
+    public static int CardType = 0;
     public static String errmsg = "1 ";
     public static SQLiteDatabase SQLdb = null;
 

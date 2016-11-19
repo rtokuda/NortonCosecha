@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -54,6 +55,11 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_splash_screen"
             android:screenOrientation="portrait"
+            android:theme="@style/FullscreenTheme" />
+        <activity
+            android:name=".InitCard"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_init_card"
             android:theme="@style/FullscreenTheme"></activity>
     </application>
 

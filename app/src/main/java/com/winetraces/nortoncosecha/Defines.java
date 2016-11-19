@@ -5,7 +5,7 @@ package com.winetraces.nortoncosecha;
  */
 
 public class Defines {
-    public final static int CONFIG_VERSION = 10;
+    public final static int CONFIG_VERSION = 11;
 
     public final static int COSECHADOR_TIMEOUT = 30;
 
@@ -26,6 +26,10 @@ public class Defines {
     public final static String COSECHADOR = "CCH";
     public final static String CAMIONREG = "CMR";
     public final static String CAMIONHDR = "CMH";
+
+    public final static int T_COSECHADOR = 1;
+    public final static int T_CAMION = 2;
+    public final static int T_BIN = 3;
 
     static public final int DEF_FIELD = 0;
 

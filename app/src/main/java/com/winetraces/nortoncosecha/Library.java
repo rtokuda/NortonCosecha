@@ -4,6 +4,8 @@ package com.winetraces.nortoncosecha;
  * Created by nestor on 05/11/2016.
  */
 
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
@@ -304,6 +306,19 @@ public class Library {
             Log.d("Memory ", Where+" Total "+info.totalMemory());
             Log.d("Memory ", Where+" Max "+info.maxMemory());
         }catch (Exception e){}
+    }
+
+    public static void keybeep()
+    {
+        ToneGenerator tone = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
+        tone.startTone(ToneGenerator.TONE_PROP_BEEP);
+        try {
+            Thread.sleep(200);
+        }catch (InterruptedException e)
+        {
+            return;
+        }
+        tone.release();
     }
 /*
     @SuppressWarnings("deprecation")

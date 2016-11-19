@@ -31,109 +31,118 @@
             android:layout_height="wrap_content"
             android:id="@+id/textClock"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:layout_marginTop="68dp"
-            android:layout_marginEnd="16dp"
+            android:textSize="25sp"
+            android:layout_marginTop="55dp"
+            android:layout_marginStart="270dp"
             android:layout_alignParentTop="true"
-            android:layout_alignParentEnd="true" />
+            android:layout_alignParentStart="true" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="300dp"
+            android:layout_height="32dp"
             android:gravity="center"
-            android:textSize="30dp"
-            android:layout_height="wrap_content"
+            android:textSize="30sp"
             android:id="@+id/cosechador_nombre"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:layout_marginTop="135dp"
-            android:layout_below="@+id/textClock"
+            android:layout_marginTop="230dp"
+            android:layout_marginStart="35dp"
+            android:layout_alignParentTop="true"
             android:layout_alignParentStart="true" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="110dp"
+            android:layout_height="42dp"
             android:gravity="center"
-            android:textSize="40dp"
+            android:textSize="40sp"
             android:id="@+id/cosechador_count"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:layout_marginTop="14dp"
-            android:layout_below="@+id/cosechador_nombre"
-            android:layout_alignParentStart="true" />
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="290dp"
+            android:layout_marginStart="125dp" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="140dp"
+            android:layout_height="32dp"
             android:id="@+id/cosechador_legajo"
-            android:textSize="30dp"
+            android:textSize="30sp"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="60dp"
-            android:text="                      "
-            android:layout_marginEnd="56dp"
-            android:layout_alignBottom="@+id/cosechador_nombre"
-            android:layout_alignEnd="@+id/textClock" />
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="170dp"
+            android:layout_marginStart="150dp"  />
 
         <TextView
-            android:text="      "
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:id="@+id/Count1"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textAlignment="center"
-            android:layout_marginTop="80dp"
-            android:layout_marginLeft="150dp"
-            android:layout_below="@+id/cosechador_count"
+            android:layout_marginTop="420dp"
+            android:layout_marginStart="150dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
             android:textSize="18sp"  />
 
         <TextView
-            android:text="      "
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:id="@+id/Count2"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:layout_alignBottom="@+id/Count1"
-            android:layout_marginLeft="205dp"
+            android:textAlignment="center"
+            android:layout_marginTop="420dp"
+            android:layout_marginStart="207dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
             android:textSize="18sp"  />
 
         <TextView
-            android:text="      "
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:id="@+id/Count3"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:layout_alignBottom="@+id/Count1"
-            android:layout_marginLeft="260dp"
+            android:textAlignment="center"
+            android:layout_marginTop="420dp"
+            android:layout_marginStart="264dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
             android:textSize="18sp"  />
 
         <TextView
-            android:text="      "
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="75dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:id="@+id/Count4"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:layout_alignParentBottom="true"
-            android:textSize="18sp"
-            android:layout_alignStart="@+id/Count1" />
+            android:textAlignment="center"
+            android:layout_marginTop="540dp"
+            android:layout_marginStart="150dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:textSize="18sp"   />
 
         <TextView
-            android:text="      "
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:id="@+id/Count5"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:layout_alignBaseline="@+id/Count4"
-            android:layout_alignBottom="@+id/Count4"
-            android:textSize="18sp"
-            android:layout_alignStart="@+id/Count2" />
+            android:textAlignment="center"
+            android:layout_marginTop="540dp"
+            android:layout_marginStart="207dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:textSize="18sp"  />
 
         <TextView
-            android:text="       "
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:id="@+id/Count6"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:layout_alignBottom="@+id/Count5"
-            android:textSize="18sp"
-            android:layout_alignStart="@+id/Count3"
-            android:layout_alignTop="@+id/Count5" />
+            android:textAlignment="center"
+            android:layout_marginTop="540dp"
+            android:layout_marginStart="264dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:textSize="18sp" />
 
         <Button
             android:layout_width="250dp"
@@ -145,7 +154,7 @@
             android:id="@+id/programa"
             android:onClick="programaClick"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="6sp"
+            android:layout_marginBottom="10dp"
             android:layout_centerHorizontal="true"
             android:background="@android:color/transparent"
             android:textColor="@android:color/holo_red_dark" />

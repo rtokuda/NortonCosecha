@@ -1,7 +1,5 @@
 package com.winetraces.nortoncosecha;
 
-import android.annotation.SuppressLint;
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;

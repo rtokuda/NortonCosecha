@@ -1,32 +1,22 @@
 package com.winetraces.nortoncosecha;
 
-import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
-import android.net.ConnectivityManager;
 import android.os.Build;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
-import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 
 public class NortonCosecha extends AppCompatActivity {
@@ -77,7 +67,7 @@ public class NortonCosecha extends AppCompatActivity {
             actionBar.hide();
         }
         RecordStore.initializeRecordStore(this, false);
-        Variables.DeviceID = Build.SERIAL.hashCode();
+        Variables.DeviceID = Build.SERIAL.hashCode(); //706F36D6
         String s = Build.SERIAL;
         SetPrograma();
        // Save_SD.save(this);
@@ -146,7 +136,7 @@ public class NortonCosecha extends AppCompatActivity {
     public void programaClick(View target)
     {
         Intent intent = new Intent(this, Programa.class);
-        keybeep();
+        Library.keybeep();
         startActivity(intent);
     }
 
@@ -273,7 +263,7 @@ public class NortonCosecha extends AppCompatActivity {
                 case KeyEvent.KEYCODE_SEARCH:
                     if  (Variables.keyEnable) {
                         intent = new Intent(this, Programa.class);
-                        keybeep();
+                        Library.keybeep();
                         startActivity(intent);
                     }
                     return true;
@@ -284,7 +274,7 @@ public class NortonCosecha extends AppCompatActivity {
                         /*Print pr = new Print();
                         (new Thread(pr)).start();*/
                         intent = new Intent(this, Menu.class);
-                        keybeep();
+                        Library.keybeep();
                         startActivity(intent);
                     }
                     return true;
@@ -352,19 +342,6 @@ public class NortonCosecha extends AppCompatActivity {
         tone.startTone(ToneGenerator.TONE_PROP_NACK);
         try {
             Thread.sleep(500);
-        }catch (InterruptedException e)
-        {
-            return;
-        }
-        tone.release();
-    }
-
-    public void keybeep()
-    {
-        ToneGenerator tone = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
-        tone.startTone(ToneGenerator.TONE_PROP_BEEP);
-        try {
-            Thread.sleep(200);
         }catch (InterruptedException e)
         {
             return;
@@ -686,6 +663,7 @@ public class NortonCosecha extends AppCompatActivity {
                 break;
             case "0000EE":
                 s = "5to CUARTEL";
+                break;
             case "0000FF":
                 s = "6to CUARTEL";
                 break;
