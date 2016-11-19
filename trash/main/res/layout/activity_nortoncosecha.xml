@@ -1,0 +1,198 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ffffff"
+    tools:context="com.winetraces.nortoncosecha.NortonCosecha">
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+
+    <!-- This FrameLayout insets its children based on system windows using
+         android:fitsSystemWindows. -->
+
+    <WebView
+        android:id="@+id/splashScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:visibility="visible" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/cosechando_caja"
+        android:id="@+id/backgroundCosechandoCaja" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/wait_programa"
+        android:id="@+id/backgroundWaitPrograma"
+        tools:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="84dp"
+        android:layout_height="288dp"
+        app:srcCompat="@drawable/bin_portion2"
+        android:id="@+id/binportion2"
+        android:layout_alignTop="@+id/cosechador_count"
+        android:layout_toStartOf="@+id/cosechador_legajo"
+        android:layout_marginLeft="50dp"
+        android:layout_marginTop="287dp"
+         />
+
+    <ImageView
+        android:layout_width="240dp"
+        android:layout_height="110dp"
+        app:srcCompat="@drawable/bin_portion1"
+        android:id="@+id/binportion1"
+        android:layout_alignTop="@+id/cosechador_count"
+        android:layout_toStartOf="@+id/cosechador_legajo"
+        android:layout_marginLeft="128dp"
+        android:layout_marginTop="344dp" />
+
+    <RelativeLayout
+        android:id="@+id/mainScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible">
+
+        <TextClock
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textClock"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_marginTop="68dp"
+            android:layout_marginEnd="16dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:gravity="center"
+            android:textSize="30dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/cosechador_nombre"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_marginTop="135dp"
+            android:layout_below="@+id/textClock"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="40dp"
+            android:id="@+id/cosechador_count"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_marginTop="14dp"
+            android:layout_below="@+id/cosechador_nombre"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:id="@+id/cosechador_legajo"
+            android:textSize="30dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="60dp"
+            android:text="                      "
+            android:layout_marginEnd="56dp"
+            android:layout_alignBottom="@+id/cosechador_nombre"
+            android:layout_alignEnd="@+id/textClock" />
+
+        <TextView
+            android:text="      "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/Count1"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textAlignment="center"
+            android:layout_marginTop="80dp"
+            android:layout_marginLeft="150dp"
+            android:layout_below="@+id/cosechador_count"
+            android:textSize="18sp"  />
+
+        <TextView
+            android:text="      "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/Count2"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_alignBottom="@+id/Count1"
+            android:layout_marginLeft="205dp"
+            android:textSize="18sp"  />
+
+        <TextView
+            android:text="      "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/Count3"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_alignBottom="@+id/Count1"
+            android:layout_marginLeft="260dp"
+            android:textSize="18sp"  />
+
+        <TextView
+            android:text="      "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="75dp"
+            android:id="@+id/Count4"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_alignParentBottom="true"
+            android:textSize="18sp"
+            android:layout_alignStart="@+id/Count1" />
+
+        <TextView
+            android:text="      "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/Count5"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_alignBaseline="@+id/Count4"
+            android:layout_alignBottom="@+id/Count4"
+            android:textSize="18sp"
+            android:layout_alignStart="@+id/Count2" />
+
+        <TextView
+            android:text="       "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/Count6"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_alignBottom="@+id/Count5"
+            android:textSize="18sp"
+            android:layout_alignStart="@+id/Count3"
+            android:layout_alignTop="@+id/Count5" />
+
+        <Button
+            android:layout_width="250dp"
+            android:layout_height="40dp"
+            android:text="@string/program_name"
+            android:textStyle="normal|bold"
+            android:fontFamily="sans-serif"
+            android:textSize="18sp"
+            android:id="@+id/programa"
+            android:onClick="programaClick"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="6sp"
+            android:layout_centerHorizontal="true"
+            android:background="@android:color/transparent"
+            android:textColor="@android:color/holo_red_dark" />
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:id="@+id/cosechadorTimer"
+            android:layout_alignTop="@+id/cosechador_count"
+            android:layout_marginTop="-20dp"
+            android:progressDrawable="@drawable/circular_progress_bar"
+            android:background="@drawable/circle_shape"
+            android:indeterminate="false"
+            android:layout_centerHorizontal="true" />
+    </RelativeLayout>
+</FrameLayout>

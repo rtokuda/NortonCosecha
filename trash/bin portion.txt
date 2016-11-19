@@ -1,0 +1,43 @@
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/cosechando_caja"
+        android:id="@+id/backgroundCosechandoCaja"
+        android:visibility="invisible" />
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/cosechando_tacho"
+        android:id="@+id/backgroundCosechandoTacho"
+        android:visibility="invisible" />
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/wait_programa"
+        android:id="@+id/backgroundWaitPrograma"
+        android:visibility="visible" />
+
+
+
+
+
+   <ImageView
+        android:layout_width="84dp"
+        android:layout_height="288dp"
+        app:srcCompat="@drawable/bin_portion2"
+        android:id="@+id/binportion2"
+        android:layout_alignTop="@+id/cosechador_count"
+        android:layout_toStartOf="@+id/cosechador_legajo"
+        android:layout_marginLeft="50dp"
+        android:layout_marginTop="287dp"
+         />
+
+    <ImageView
+        android:layout_width="240dp"
+        android:layout_height="110dp"
+        app:srcCompat="@drawable/bin_portion1"
+        android:id="@+id/binportion1"
+        android:layout_alignTop="@+id/cosechador_count"
+        android:layout_toStartOf="@+id/cosechador_legajo"
+        android:layout_marginLeft="128dp"
+        android:layout_marginTop="344dp" />

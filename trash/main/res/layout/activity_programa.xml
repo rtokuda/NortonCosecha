@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_programa"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.winetraces.nortoncosecha.Programa">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/sel_programa"
+        android:layout_alignParentTop="true"
+        android:id="@+id/background"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:text="                                     "
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/seleccionar"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:background="@android:color/transparent"
+        android:cursorVisible="true"
+        android:onClick="seleccionarClick"
+        android:textStyle="normal|bold"
+        android:fontFamily="sans-serif"
+        android:layout_marginBottom="12dp" />
+
+    <TextClock
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="68dp"
+        android:layout_marginEnd="8dp"
+        android:id="@+id/textClock2"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:textSize="22sp" />
+
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textClock2"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="135dp"
+        android:onClick="buttonLeftClick"
+        android:id="@+id/button_left"
+        android:background="@android:color/transparent" />
+
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/button_left"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/button_right"
+        android:onClick="buttonRightClick"
+        android:layout_alignTop="@+id/button_left"
+        android:background="@android:color/transparent" />
+
+    <TextView
+        android:layout_width="200dp"
+        android:layout_height="32dp"
+        android:layout_below="@+id/button_left"
+        android:layout_alignStart="@+id/seleccionar"
+        android:layout_marginStart="21dp"
+        android:layout_marginTop="18dp"
+        android:id="@+id/fincaView"
+        android:textSize="24sp" />
+
+    <TextView
+        android:layout_width="200dp"
+        android:layout_height="32dp"
+        android:layout_below="@+id/fincaView"
+        android:layout_alignStart="@+id/fincaView"
+        android:layout_marginTop="9dp"
+        android:id="@+id/cuartelView"
+        android:textSize="24sp" />
+
+    <TextView
+        android:layout_width="200dp"
+        android:layout_height="32dp"
+        android:layout_below="@+id/cuartelView"
+        android:layout_alignStart="@+id/cuartelView"
+        android:layout_marginTop="9dp"
+        android:id="@+id/areaView"
+        android:textSize="24sp" />
+
+    <TextView
+        android:layout_width="200dp"
+        android:layout_height="32dp"
+        android:layout_below="@+id/areaView"
+        android:layout_alignStart="@+id/areaView"
+        android:layout_marginTop="9dp"
+        android:id="@+id/programaView"
+        android:textSize="24sp" />
+
+    <TextView
+        android:layout_width="200dp"
+        android:layout_height="32dp"
+        android:layout_below="@+id/programaView"
+        android:layout_alignStart="@+id/programaView"
+        android:layout_marginTop="9dp"
+        android:id="@+id/cuadrillaView"
+        android:textSize="24sp" />
+
+    <TextView
+        android:layout_width="200dp"
+        android:layout_height="32dp"
+        android:layout_below="@+id/cuadrillaView"
+        android:layout_alignStart="@+id/cuadrillaView"
+        android:layout_marginTop="9dp"
+        android:id="@+id/cantidadView"
+        android:textSize="24sp" />
+
+    <TextView
+        android:layout_width="200dp"
+        android:layout_height="32dp"
+        android:layout_below="@+id/cantidadView"
+        android:layout_alignStart="@+id/cantidadView"
+        android:layout_marginTop="9dp"
+        android:id="@+id/variedadView"
+        android:textSize="24sp" />
+
+    <TextView
+        android:layout_width="250dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="2dp"
+        android:id="@+id/progamaAct"
+        android:layout_alignTop="@+id/button_right"
+        android:layout_toStartOf="@+id/button_right"
+        android:background="@android:color/background_dark"
+        android:textSize="24sp"
+        android:textColor="@android:color/background_light" />
+
+</RelativeLayout>

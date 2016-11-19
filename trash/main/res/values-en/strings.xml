@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NortonCosecha</string>
+    <string name="app_enabled">Application Enabled</string>
+    <string name="app_version">Norton Cosecha Version 3.00a</string>
+    <string name="app_please_enable">Please enable the application</string>
+    <string name="nombreApellido">First and Last Name</string>
+    <string name="err_CardInvalid">Invalid Card</string>
+    <string name="program_name">HARVEST PROGRAM</string>
+</resources>
