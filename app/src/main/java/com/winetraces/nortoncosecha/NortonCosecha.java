@@ -16,6 +16,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.winetraces.recordstore.RecordStore;
+
 import java.io.InputStream;
 
 
@@ -28,18 +31,18 @@ public class NortonCosecha extends AppCompatActivity {
     private Button setPrograma;
     private ProgressBar mCosechadorTimer;
     private Handler handler = new Handler();
-    private String sBackground;
+    private String sBackground = "";
     private int prgInx;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Library.LogMem("On create0 ");
 
         setContentView(R.layout.activity_nortoncosecha);
         mMainView = findViewById(R.id.mainScreen);
         mBackground = (ImageView) findViewById(R.id.background);
         getImage("wait_programa.png");
+        Defines.currView = mBackground;
 
         mNombre = (TextView) findViewById(R.id.cosechador_nombre);
         mCount = (TextView) findViewById(R.id.cosechador_count);
@@ -70,7 +73,7 @@ public class NortonCosecha extends AppCompatActivity {
         Variables.DeviceID = Build.SERIAL.hashCode(); //706F36D6
         String s = Build.SERIAL;
         SetPrograma();
-       // Save_SD.save(this);
+
         Variables.ErrNum = 0;
         prgInx = 0;
 
@@ -121,14 +124,17 @@ public class NortonCosecha extends AppCompatActivity {
 
     private void getImage(String file)
     {
-        try {
-            InputStream ims = getAssets().open(file);
-            Drawable d = Drawable.createFromStream(ims, null);
-            mBackground.setImageDrawable(d);
-            ims.close();
-        }catch (Exception e){}
-        mBackground.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        mBackground.setScaleType(ImageView.ScaleType.FIT_XY);
+        if (!file.equals(sBackground)) {
+            try {
+                InputStream ims = getAssets().open(file);
+                Drawable d = Drawable.createFromStream(ims, null);
+                mBackground.setImageDrawable(d);
+                ims.close();
+            } catch (Exception e) {
+            }
+            mBackground.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            mBackground.setScaleType(ImageView.ScaleType.FIT_XY);
+        }
         mBackground.setVisibility(ImageView.VISIBLE);
         sBackground = file;
     }
@@ -178,13 +184,25 @@ public class NortonCosecha extends AppCompatActivity {
         super.onNewIntent(intent);
         if (Variables.bFlagCosecha && MifareIO.connect(this, intent)) {
             if (Cosecha.CardProcess(this, intent)) {
-                refreshScreenCosecha();
-                goodBeep();
+                switch (Variables.CardType)
+                {
+                    case Defines.T_BIN:
+                    case Defines.T_CHANGE:
+                    case Defines.T_CAMION:
+                        Library.alert(this,"Información", Variables.msg, android.R.drawable.ic_dialog_info);
+                        break;
+                    case Defines.T_COSECHADOR:
+                        refreshScreenCosecha();
+                        break;
+                    case Defines.T_PROGRAMA:
+                        break;
+                }
+                Library.goodBeep();
             }
-            else { badBeep(); }
+            else { Library.badBeep(); }
         }
         else {
-            badBeep();
+            Library.badBeep();
         }
         MifareIO.disconnect();
     }
@@ -308,33 +326,6 @@ public class NortonCosecha extends AppCompatActivity {
         super.onDestroy();
     }
 
-    public void goodBeep()
-    {
-        ToneGenerator tone = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
-        //tone.startTone(ToneGenerator.TONE_PROP_ACK);
-        tone.startTone(ToneGenerator.TONE_CDMA_ABBR_INTERCEPT);
-        try {
-            Thread.sleep(400);
-        }catch (InterruptedException e)
-        {
-            return;
-        }
-        tone.release();
-    }
-
-    public void badBeep()
-    {
-        ToneGenerator tone = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
-        //tone.startTone(ToneGenerator.TONE_PROP_NACK);
-        tone.startTone(ToneGenerator.TONE_CDMA_SOFT_ERROR_LITE);
-        try {
-            Thread.sleep(300);
-        }catch (InterruptedException e)
-        {
-            return;
-        }
-        tone.release();
-    }
 
     public void badBeep2()
     {

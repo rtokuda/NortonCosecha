@@ -27,16 +27,28 @@
         android:layout_alignParentStart="true" />
 
     <Button
-        android:layout_width="160dp"
-        android:layout_height="40dp"
+        android:layout_width="140dp"
+        android:layout_height="35dp"
         android:id="@+id/seleccionar"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="25dp"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="12dp"
         android:background="@android:color/transparent"
         android:onClick="seleccionarClick"
-        android:textStyle="normal|bold"
-        android:fontFamily="sans-serif"
-        android:layout_marginBottom="12dp" />
+         />
+
+    <Button
+        android:layout_width="140dp"
+        android:layout_height="35dp"
+        android:id="@+id/cancelar"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="190dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="12dp"
+        android:background="@android:color/transparent"
+        android:onClick="cancelarClick"
+        />
 
     <Button
         android:layout_width="40dp"
@@ -60,6 +72,7 @@
         android:onClick="buttonRightClick"
         android:layout_alignTop="@+id/button_left"
         android:background="@android:color/transparent" />
+
     <TextView
         android:layout_width="245dp"
         android:layout_height="30dp"

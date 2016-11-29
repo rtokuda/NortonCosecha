@@ -1,5 +1,7 @@
 package com.winetraces.nortoncosecha;
 
+import android.view.View;
+
 /**
  * Created by nestor on 05/11/2016.
  */
@@ -21,15 +23,32 @@ public class Defines {
     public final static int ERROR_CARD_WRITE = 3;
 
     public final static int KEY_A = 0;
-    public final static int KEY_B = 0;
+    public final static int KEY_B = 1;
+    public final static int KEY_TRANSPORT_FF = 2;
+    public final static int KEY_TRANSPORT_AA = 3;
 
-    public final static String COSECHADOR = "CCH";
-    public final static String CAMIONREG = "CMR";
-    public final static String CAMIONHDR = "CMH";
+
+    public final static String R_COSECHADOR = "CCH";
+    public final static String R_CAMIONREG = "CMR";
+    public final static String R_CAMIONHDR = "CMH";
+
+
+    public final static String THDR_COSECHADOR = "CCH";
+    public final static String THDR_CAMION = "CAM";
+    public final static String THDR_CHANGE = "CHG";
+    public final static String THDR_BIN = "BIN";
+    public final static String THDR_PROGRAMA = "PRG";
 
     public final static int T_COSECHADOR = 1;
     public final static int T_CAMION = 2;
     public final static int T_BIN = 3;
+    public final static int T_PROGRAMA = 4;
+    public final static int T_CHANGE = 5;
+
+    public final static int RP_COSECHADOR = 0;
+    public final static int RP_CUADRILLA = 1;
+    public final static int RP_PRESENTISMO = 2;
+    public final static int RP_REMITO = 3;
 
     static public final int DEF_FIELD = 0;
 
@@ -60,13 +79,22 @@ public class Defines {
     static public final int R_VARIEDAD = 73;
     static public final int PRG_LEN = 46;
 
+    static public View currView = null;
+
     static public final String prtLine = "--------------------------------------";
     static public final String[] meses = {"Ene","Feb","Mar","Abr","May","Jun",
             "Jul","Ago","Sep","Oct","Nov","Dic"
     };
     static byte[] trailer = {
-            (byte)0xC0,(byte)0xC1,(byte)0xC2,(byte)0xC3,(byte)0xC4,(byte)0xC5,
-            (byte)0x7F,(byte)0x07,(byte)0x88,(byte)0xFF,
-            (byte)0xD0,(byte)0xD1,(byte)0xD2,(byte)0xD3,(byte)0xD4,(byte)0xD5};
+        (byte)0xC0,(byte)0xC1,(byte)0xC2,(byte)0xC3,(byte)0xC4,(byte)0xC5,(byte)0x7F,(byte)0x07,
+        (byte)0x88,(byte)0xFF,(byte)0xD0,(byte)0xD1,(byte)0xD2,(byte)0xD3,(byte)0xD4,(byte)0xD5};
+    //7f0788FF  (mobile)
+    //KeyA Read:Never Write:KeyB
+    //KeyB Read:Never Write:KeyB
+    //Access Bits: Read:KeyA/B  Write:KeyB
 
+    //FF0780FF (desktop)
+    //KeyA  Read:Never  Write:KeyA
+    //KeyB  Read:KeyA   Write:KeyA
+    //Access Bits:  Read:KeyA   Write:KeyA
 }

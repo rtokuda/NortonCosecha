@@ -1,7 +1,5 @@
 package com.winetraces.nortoncosecha;
 
-import android.app.ActivityManager;
-import android.database.sqlite.SQLiteDatabase;
 
 /**
  * Created by nestor on 30/10/2016.
@@ -61,7 +59,9 @@ public class Variables {
     public static int csCount;
 
     public static int CardType = 0;
+    public static int PrintType = 0;
     public static String errmsg = "1 ";
-    public static SQLiteDatabase SQLdb = null;
+    public static String msg;
+//    public static SQLiteDatabase SQLdb = null;
 
 }

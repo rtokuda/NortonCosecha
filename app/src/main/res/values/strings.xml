@@ -17,4 +17,6 @@
     <string name="title_activity_splash_screen">SplashScreen</string>
 
     <string name="title_activity_init_card">InitCard</string>
+
+    <string name="title_activity_reportes">Reportes</string>
 </resources>

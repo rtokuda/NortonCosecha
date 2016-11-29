@@ -6,16 +6,22 @@ import android.graphics.drawable.Drawable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import com.winetraces.wifimanager.ClientScanResult;
+import com.winetraces.wifimanager.FinishScanListener;
+import com.winetraces.wifimanager.WifiApManager;
+
 import java.io.InputStream;
+import java.util.ArrayList;
 
 public class Menu extends AppCompatActivity implements View.OnClickListener {
     private ImageView mBackground;
-    private String sBackground;
+    private String sBackground = "";
     private int menu_inx;
 
     private Button[][] btn = new Button[4][8];
@@ -99,16 +105,29 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
                 startActivity(intent);
                 break;
             case R.id.b_r_cosechador:
+                Variables.PrintType = Defines.RP_COSECHADOR;
+                intent = new Intent(this, Reportes.class);
+                startActivity(intent);
                 break;
             case R.id.b_r_cuadrilla:
+                Variables.PrintType = Defines.RP_CUADRILLA;
+                intent = new Intent(this, Reportes.class);
+                startActivity(intent);
                 break;
             case R.id.b_r_presentismo:
+                Variables.PrintType = Defines.RP_PRESENTISMO;
+                intent = new Intent(this, Reportes.class);
+                startActivity(intent);
                 break;
             case R.id.b_r_remito:
+                Variables.PrintType = Defines.RP_REMITO;
+                intent = new Intent(this, Reportes.class);
+                startActivity(intent);
                 break;
             case R.id.b_d_red:
                 break;
             case R.id.b_d_sd:
+                // Save_SD.save(this);
                 break;
         }
     }
@@ -155,14 +174,17 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
 
     private void getImage(String file)
     {
-        try {
-            InputStream ims = getAssets().open(file);
-            Drawable d = Drawable.createFromStream(ims, null);
-            mBackground.setImageDrawable(d);
-            ims.close();
-        }catch (Exception e){}
-        mBackground.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        mBackground.setScaleType(ImageView.ScaleType.FIT_XY);
+        if (!file.equals(sBackground)) {
+            try {
+                InputStream ims = getAssets().open(file);
+                Drawable d = Drawable.createFromStream(ims, null);
+                mBackground.setImageDrawable(d);
+                ims.close();
+            } catch (Exception e) {
+            }
+            mBackground.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            mBackground.setScaleType(ImageView.ScaleType.FIT_XY);
+        }
         mBackground.setVisibility(ImageView.VISIBLE);
         sBackground = file;
     }
@@ -200,4 +222,6 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
         super.onNewIntent(intent);
         MifareIO.disconnect();
     }
+
+
 }

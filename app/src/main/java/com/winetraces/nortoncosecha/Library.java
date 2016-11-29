@@ -4,12 +4,19 @@ package com.winetraces.nortoncosecha;
  * Created by nestor on 05/11/2016.
  */
 
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Build;
+import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -320,6 +327,56 @@ public class Library {
         }
         tone.release();
     }
+
+    public static void goodBeep()
+    {
+        ToneGenerator tone = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
+        //tone.startTone(ToneGenerator.TONE_PROP_ACK);
+        tone.startTone(ToneGenerator.TONE_CDMA_ABBR_INTERCEPT);
+        try {
+            Thread.sleep(400);
+        }catch (InterruptedException e)
+        {
+            return;
+        }
+        tone.release();
+    }
+
+    public static void badBeep()
+    {
+        ToneGenerator tone = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
+        //tone.startTone(ToneGenerator.TONE_PROP_NACK);
+        tone.startTone(ToneGenerator.TONE_CDMA_SOFT_ERROR_LITE);
+        try {
+            Thread.sleep(300);
+        }catch (InterruptedException e)
+        {
+            return;
+        }
+        tone.release();
+    }
+
+    public static void alert (Context context, String title, String msg, int icon) {
+        AlertDialog alertDialog = new AlertDialog.Builder(context).create();
+        alertDialog.setTitle(title);
+        alertDialog.setIcon(icon);
+        alertDialog.setMessage(msg);
+        alertDialog.setButton(Dialog.BUTTON_NEGATIVE, "Aceptar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int wich) {
+                Library.keybeep();
+                dialog.cancel();
+                Defines.currView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                );
+            }
+        });
+        alertDialog.setCancelable(false);
+        alertDialog.show();
+        Button b = alertDialog.getButton(Dialog.BUTTON_NEGATIVE);
+        b.setBackgroundColor(Color.LTGRAY);
+    }
+
 /*
     @SuppressWarnings("deprecation")
     public static Spanned fromHtml(String source)

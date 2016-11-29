@@ -1,20 +1,18 @@
 package com.winetraces.nortoncosecha;
 
-import android.app.Dialog;
 import android.app.PendingIntent;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.winetraces.recordstore.RecordStore;
+
 import java.io.InputStream;
 import java.util.Calendar;
 
@@ -30,7 +28,7 @@ public class Programa extends AppCompatActivity {
     int fechaHoy;
     private TextView programaAct, fincaView, cuartelView, areaView, programaView;
     private TextView cuadrillaView, cantidadView, variedadView;
-    private String sBackground;
+    private String sBackground = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +55,7 @@ public class Programa extends AppCompatActivity {
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );
+        Defines.currView = mBackground;
 
         horaAct = NortonCosecha.GetClock();
         try {
@@ -82,15 +81,18 @@ public class Programa extends AppCompatActivity {
 
     private void getImage(String file)
     {
-        try {
-            InputStream ims = getAssets().open(file);
-            Drawable d = Drawable.createFromStream(ims, null);
-            mBackground.setImageDrawable(d);
-            ims.close();
-        }catch (Exception e){}
-        mBackground.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        mBackground.setScaleType(ImageView.ScaleType.FIT_XY);
-        mBackground.setVisibility(ImageView.VISIBLE);
+        if (!file.equals(sBackground)) {
+            try {
+                InputStream ims = getAssets().open(file);
+                Drawable d = Drawable.createFromStream(ims, null);
+                mBackground.setImageDrawable(d);
+                ims.close();
+            } catch (Exception e) {
+            }
+            mBackground.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            mBackground.setScaleType(ImageView.ScaleType.FIT_XY);
+            mBackground.setVisibility(ImageView.VISIBLE);
+        }
         sBackground = file;
     }
 
@@ -126,7 +128,7 @@ public class Programa extends AppCompatActivity {
             try {
                 RecordStore record = RecordStore.openRecordStore("CamionReg", true);
                 byte[] buff = new byte[512];
-                int inx = Library.setField(buff, Defines.CAMIONHDR, 0, Defines.TIPO_LOG);
+                int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
                 inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
                 inx = Library.setField(buff, Variables.Cuartel, inx, Defines.R_CUARTEL);
                 inx = Library.setField(buff, Variables.Area, inx, Defines.R_AREA);
@@ -215,6 +217,12 @@ public class Programa extends AppCompatActivity {
         Library.keybeep();
     }
 
+    public void cancelarClick(View target)
+    {
+        Library.keybeep();
+        onBackPressed();
+    }
+
     public void seleccionarClick(View target)
     {
         byte datos[]=new byte[10];
@@ -222,24 +230,7 @@ public class Programa extends AppCompatActivity {
         Library.keybeep();
         if (Variables.TachoCajaCnt != 0)
         {
-            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-            alertDialog.setTitle("Atención");
-            alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
-            alertDialog.setMessage("Debe cerrar el bin para cambiar el programa");
-            alertDialog.setButton(Dialog.BUTTON_NEGATIVE, "Aceptar", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int wich) {
-                    Library.keybeep();
-                    dialog.cancel();
-                    mBackground.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    );
-                }
-            });
-            alertDialog.setCancelable(false);
-            alertDialog.show();
-            Button b = alertDialog.getButton(Dialog.BUTTON_NEGATIVE);
-            b.setBackgroundColor(Color.LTGRAY);
+            Library.alert (this, "Atención", "Debe cerrar el bin para cambiar el programa", android.R.drawable.ic_dialog_alert);
             return;
         }
         try {
@@ -271,7 +262,7 @@ public class Programa extends AppCompatActivity {
                 try {
                     RecordStore record = RecordStore.openRecordStore("CamionReg", true);
                     byte[] buff = new byte[512];
-                    int inx = Library.setField(buff, Defines.CAMIONHDR, 0, Defines.TIPO_LOG);
+                    int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
                     inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
                     inx = Library.setField(buff, Variables.Cuartel, inx, Defines.R_CUARTEL);
                     inx = Library.setField(buff, Variables.Area, inx, Defines.R_AREA);

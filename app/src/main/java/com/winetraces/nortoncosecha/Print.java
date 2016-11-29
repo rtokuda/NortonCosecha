@@ -1,12 +1,13 @@
 package com.winetraces.nortoncosecha;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
+import com.winetraces.recordstore.RecordEnumeration;
+import com.winetraces.recordstore.RecordStore;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * Created by nestor on 18/11/2016.
@@ -16,6 +17,8 @@ class Print implements Runnable
 {
     HttpURLConnection connection = null;
     OutputStreamWriter outs;
+
+    URLConnection urlConnection;
     //String url = "socket://192.168.0.96:80;interface=wifi";
     //String url = "http://192.168.0." + (NortonCosecha.DeviceID & 255)+":80;interface=wifi";
 
@@ -75,7 +78,7 @@ class Print implements Runnable
                     catch(IOException error){}
                     doble = true;
                 }
-                if ((attrib[i]==0) && (doble = true))
+                if ((attrib[i]==0) && (doble == true))
                 {
                     try {
                         outs.write(15);
@@ -108,11 +111,17 @@ class Print implements Runnable
         }
 
         try {
-            //connection = (StreamConnection)Connector.open(url);
             URL url = new URL("http://192.168.0.32/"); //+Variables.sWiFiURL);
+            //connection = (StreamConnection)Connector.open(url);
+/*            urlConnection = url.openConnection();
+
+            urlConnection.setDoOutput(true);
+*/
             connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setChunkedStreamingMode(0);
+
+
         }
         catch(IOException error)
         {
@@ -121,6 +130,7 @@ class Print implements Runnable
         }
         try {
             outs = 	new OutputStreamWriter(connection.getOutputStream());
+            //outs = 	new OutputStreamWriter(urlConnection.getOutputStream());
         }
         catch(IOException error)
         {

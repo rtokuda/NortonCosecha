@@ -1,5 +1,7 @@
 package com.winetraces.nortoncosecha;
 
+import com.winetraces.recordstore.RecordStore;
+
 import java.util.Calendar;
 
 /**

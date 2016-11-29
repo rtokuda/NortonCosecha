@@ -1,17 +1,15 @@
-package com.winetraces.nortoncosecha;
+package com.winetraces.recordstore;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
-import java.io.File;
 import java.util.Arrays;
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.winetraces.recordstore.RecordStore.SQLdb;
 
 /**
  * Created by nestor on 05/11/2016.
@@ -21,6 +19,7 @@ public class RecordStore {
     private String recordName = null;
     private boolean recordFlag = false;
     private byte[] record = null;
+    public static SQLiteDatabase SQLdb = null;
 
     private RecordEnumeration re = null;
 
@@ -30,14 +29,14 @@ public class RecordStore {
                 contexto.deleteDatabase("RecordStore");
             }catch(Exception e){}
         }
-        Variables.SQLdb = contexto.openOrCreateDatabase("RecordStore", MODE_PRIVATE, null);
+        SQLdb = contexto.openOrCreateDatabase("RecordStore", MODE_PRIVATE, null);
         return true;
     }
 
     public static String[] listRecordStore() {
         Cursor cursor = null;
         try {
-            cursor = Variables.SQLdb.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table'", null);
+            cursor = SQLdb.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table'", null);
             if (cursor != null) {
                 String[] strAux = new String[cursor.getCount()];
                 if (cursor.moveToFirst()) {
@@ -76,19 +75,19 @@ public class RecordStore {
 
     public RecordStore open (String name, boolean flag)  //ToDo flag
     {
-        if (Variables.SQLdb == null)
+        if (SQLdb == null)
             return null;
         recordName = "rd_"+name;
         recordFlag = flag;
         try {
-            Variables.SQLdb.execSQL("CREATE TABLE IF NOT EXISTS "+ recordName + " (recordID INTEGER PRIMARY KEY AUTOINCREMENT, recordData TEXT);");
+            SQLdb.execSQL("CREATE TABLE IF NOT EXISTS "+ recordName + " (recordID INTEGER PRIMARY KEY AUTOINCREMENT, recordData TEXT);");
         }catch(Exception e){return null;}
         return this;
     }
 
     public void closeRecordStore()
     {
-        if (Variables.SQLdb == null)
+        if (SQLdb == null)
             return;
        // SQLdb.execSQL("COMMIT;");
         recordName = null;
@@ -96,19 +95,19 @@ public class RecordStore {
 
     public static void deleteRecordStore(String name)
     {
-        if (Variables.SQLdb == null)
+        if (SQLdb == null)
             return;
         try {
-            Variables.SQLdb.execSQL("DROP TABLE rd_"+name+";");
+            SQLdb.execSQL("DROP TABLE rd_"+name+";");
         }catch(Exception e){}
     }
 
     public void deleteRecord(int inx)
     {
-        if (Variables.SQLdb == null)
+        if (SQLdb == null)
             return;
         try {
-            Variables.SQLdb.execSQL("DELETE FROM "+ recordName + " WHERE recordID = "+inx);
+            SQLdb.execSQL("DELETE FROM "+ recordName + " WHERE recordID = "+inx);
         }catch(Exception e){}
     }
 
@@ -116,7 +115,7 @@ public class RecordStore {
     {
         if (recordName == null)
             return 0;
-        return ((int)(DatabaseUtils.queryNumEntries(Variables.SQLdb, recordName)));
+        return ((int)(DatabaseUtils.queryNumEntries(SQLdb, recordName)));
     }
 
     public byte[] getRecord(int inx)
@@ -127,7 +126,7 @@ public class RecordStore {
         if ((recordName == null) || (inx <= 0))
             return null;
         try {
-            cursor = Variables.SQLdb.rawQuery("SELECT recordData FROM "+ recordName +" WHERE recordID = "+ inx, null);
+            cursor = SQLdb.rawQuery("SELECT recordData FROM "+ recordName +" WHERE recordID = "+ inx, null);
             if (cursor != null)
             {
                 cursor.moveToFirst();
@@ -159,7 +158,7 @@ public class RecordStore {
 
         if ((recordName == null) || (inx <= 0))
             return null;
-        Cursor cursor = Variables.SQLdb.rawQuery("SELECT recordData FROM "+ recordName +" WHERE recordID = "+ inx, null);
+        Cursor cursor = SQLdb.rawQuery("SELECT recordData FROM "+ recordName +" WHERE recordID = "+ inx, null);
         if (cursor != null) {
             cursor.moveToFirst();
             if (cursor.isAfterLast())
@@ -177,10 +176,10 @@ public class RecordStore {
         if (offset+numBytes > dato.length)
             return 0;
         for (int i=0; i<numBytes; i++)
-            dt = dt+Library.padHex(dato[offset+i]);
+            dt = dt+ padHex(dato[offset+i]);
         ContentValues values = new ContentValues();
         values.put("recordData", dt);
-        long id = Variables.SQLdb.insert(recordName, null, values);
+        long id = SQLdb.insert(recordName, null, values);
         return (int)id;
     }
 
@@ -188,10 +187,9 @@ public class RecordStore {
     {
         if (recordName == null)
             return 0;
-        ContentValues values = new ContentValues();
-        values.put("recordData", s);
-        long id = Variables.SQLdb.insert(recordName, null, values);
-        return (int)id;
+        if ((s == null)|| (s.length()==0))
+            return 0;
+        return (addRecord(s.getBytes(), 0, s.length()));
     }
 
     public void setRecord(int index, byte[] dato, int offset, int numBytes)
@@ -202,10 +200,10 @@ public class RecordStore {
         if (offset+numBytes > dato.length)
             return;
         for (int i=0; i<numBytes; i++)
-            dt = dt+Library.padHex(dato[offset+i]);
+            dt = dt+padHex(dato[offset+i]);
         ContentValues values = new ContentValues();
         values.put("recordData", dt);
-        Variables.SQLdb.update(recordName, values, "recordID = "+index, null);
+        SQLdb.update(recordName, values, "recordID = "+index, null);
     }
 
     public RecordEnumeration enumerateRecords(RecordFilter filter, RecordComparator comparator, boolean KeepUpdated)
@@ -238,6 +236,24 @@ public class RecordStore {
 
     public void setMode(int authmode, boolean writeable) {}
 */
+    public static int Ubyte(int b) {
+        if (b < 0)
+            b += 256;
+        return b;
+    }
+    public static String padHex(byte value) {
+        String s = "00" + Integer.toHexString(Ubyte(value)).toUpperCase();
+        return s.substring(s.length() - 2);
+    }
+
+    public static String padHex(int value, int len) {
+        String s = "";
+        for (int i = 0; i < len; i++)
+            s = s + "0";
+        s += Integer.toHexString(value).toUpperCase();
+        return s.substring(s.length() - len);
+    }
+
 }
 
 class RecordFilter{
@@ -248,93 +264,7 @@ class RecordComparator {
 // ToDo
 }
 
-class RecordEnumeration {
 
-    private String rName;
-    private int index = 0;
-    private int max = 0;
-    private int colRecord = 0;
-    private int colID = 0;
-    Cursor crs = null;
-
-    public RecordEnumeration (String name)
-    {
-        if (name == null)
-            return;
-        rName = name;
-        index = 0;
-        max = 0;
-        crs = Variables.SQLdb.rawQuery("SELECT recordData, recordID FROM "+ rName, null);
-        if (crs != null) {
-            crs.moveToFirst();
-            if (crs.isAfterLast()) {
-                crs = null;
-                return;
-            }
-            colRecord = crs.getColumnIndex("recordData");
-            colID = crs.getColumnIndex("recordID");
-            max = crs.getCount();
-        }
-    }
-
-    public boolean hasNextElement()
-    {
-        if ((index < max) && (crs != null))
-            return true;
-        return false;
-    }
-
-    public int nextRecordId()
-    {
-        if ((index >= max) || (crs == null))
-            return 0;
-        int id = crs.getInt(colID);
-        crs.moveToNext();
-        index++;
-        return id;
-    }
-
-    public void reset()
-    {
-        if (crs != null)
-        {
-            crs.moveToFirst();
-            index = 0;
-        }
-    }
-
-    public void rebuild()
-    {
-        index = 0;
-        max = 0;
-        crs = Variables.SQLdb.rawQuery("SELECT recordData, recordID FROM "+ rName, null);
-        if (crs != null) {
-            crs.moveToFirst();
-            if (crs.isAfterLast()) {
-                crs = null;
-                return;
-            }
-            colRecord = crs.getColumnIndex("recordData");
-            colID = crs.getColumnIndex("recordID");
-            max = crs.getCount();
-        }
-    }
-
-/*    public boolean hasPreviousElement()  { return false; }
-
-    public byte[] nextRecord()  { return null; }
-
-    public byte[] previousRecord() { return null; }
-
-    public int previousRecordId() { return 0; }
-
-    public void keepUpdated() {}
-
-    public boolean isKeepUpdated() {return false;}
-
-    public void destroy() {}
-    */
-}
 
 class RecordListener //ToDo
 {
