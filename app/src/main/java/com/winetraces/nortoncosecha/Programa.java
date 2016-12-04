@@ -57,16 +57,16 @@ public class Programa extends AppCompatActivity {
         );
         Defines.currView = mBackground;
 
-        horaAct = NortonCosecha.GetClock();
+        horaAct = Misc.GetClock();
         try {
-            record = RecordStore.openRecordStore("Programas", true);
+            record = RecordStore.openRecordStore("Programas", true, Defines.OPEN_READ);
             cnt = record.getNumRecords();
             MaxProg = 0;
             for (i=0; i<cnt; i++)
             {
                 String tx[] = new String [10];
                 datos = record.getRecord(i+1);
-                NortonCosecha.splitPrograma(datos, tx);
+                Misc.splitPrograma(datos, tx);
                 prg[i]= tx[0];
                 for (byte j=0; j<9; j++)
                     txt[i][j]=tx[j+1];
@@ -114,19 +114,19 @@ public class Programa extends AppCompatActivity {
             Variables.VariedadUva = txt[ProgInx][8];
             //NortonCosecha.TachoCajaCnt = 0;
             try {
-                record = RecordStore.openRecordStore("ProgSel",true);
+                record = RecordStore.openRecordStore("ProgSel",true, Defines.OPEN_WRITE);
                 byte dd[] = prg[ProgInx].getBytes();
                 Library.byteArrayCopy(dd, datos);
-                int horaAct = NortonCosecha.GetClock();
+                int horaAct = Misc.GetClock();
                 Library.toIntelDataInt(horaAct, datos, 6);
                 record.addRecord(datos,0,10);
                 record.closeRecordStore();
                 Variables.FechaProg = horaAct / 86400;
                 Variables.ProgSel = true;
-                NortonCosecha.SaveConfig();
+                Misc.SaveConfig();
             }catch (Exception e){}
             try {
-                RecordStore record = RecordStore.openRecordStore("CamionReg", true);
+                RecordStore record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
                 byte[] buff = new byte[512];
                 int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
                 inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
@@ -141,7 +141,7 @@ public class Programa extends AppCompatActivity {
                 String fname = "NLOG"+Integer.toString(Fecha.get(Calendar.YEAR))+
                         Library.padNum(Fecha.get(Calendar.MONTH)+1, 2)+
                         Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH), 2);
-                RecordStore record = RecordStore.openRecordStore(fname, true);
+                RecordStore record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
                 datos = new byte [15];
                 datos[0] = 3;
 
@@ -161,7 +161,7 @@ public class Programa extends AppCompatActivity {
                 record.addRecord(datos, 0, 15);
                 record.closeRecordStore();
             }catch(Exception e){e.printStackTrace();}
-            NortonCosecha.SaveConfig();
+            Misc.SaveConfig();
         }
     }
     @Override
@@ -248,19 +248,19 @@ public class Programa extends AppCompatActivity {
                 Variables.VariedadUva = txt[ProgInx][8];
                 //NortonCosecha.TachoCajaCnt = 0;
                 try {
-                    record = RecordStore.openRecordStore("ProgSel",true);
+                    record = RecordStore.openRecordStore("ProgSel",true, Defines.OPEN_WRITE);
                     byte dd[] = prg[ProgInx].getBytes();
                     Library.byteArrayCopy(dd, datos);
-                    int horaAct = NortonCosecha.GetClock();
+                    int horaAct = Misc.GetClock();
                     Library.toIntelDataInt(horaAct, datos, 6);
                     record.addRecord(datos,0,10);
                     record.closeRecordStore();
                     Variables.FechaProg = horaAct / 86400;
                     Variables.ProgSel = true;
-                    NortonCosecha.SaveConfig();
+                    Misc.SaveConfig();
                 }catch (Exception e){}
                 try {
-                    RecordStore record = RecordStore.openRecordStore("CamionReg", true);
+                    RecordStore record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
                     byte[] buff = new byte[512];
                     int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
                     inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
@@ -275,7 +275,7 @@ public class Programa extends AppCompatActivity {
                     String fname = "NLOG"+Integer.toString(Fecha.get(Calendar.YEAR))+
                             Library.padNum(Fecha.get(Calendar.MONTH)+1, 2)+
                             Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH), 2);
-                    RecordStore record = RecordStore.openRecordStore(fname, true);
+                    RecordStore record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
                     datos = new byte [15];
                     datos[0] = 3;
 
@@ -296,7 +296,7 @@ public class Programa extends AppCompatActivity {
                     record.addRecord(datos, 0, 15);
                     record.closeRecordStore();
                 }catch(Exception e){e.printStackTrace();}
-                NortonCosecha.SaveConfig();
+                Misc.SaveConfig();
                 Variables.bFlagCosecha = true;
             }
             onBackPressed();

@@ -79,6 +79,9 @@ public class Defines {
     static public final int R_VARIEDAD = 73;
     static public final int PRG_LEN = 46;
 
+    static public final boolean OPEN_WRITE = true;
+    static public final boolean OPEN_READ = false;
+
     static public View currView = null;
 
     static public final String prtLine = "--------------------------------------";

@@ -34,10 +34,9 @@ class Print implements Runnable
     {
         boolean first = true;
         error = false;
-
         //url = "http://"+Variables.sWiFiURL;
         try {
-            RecordStore record = RecordStore.openRecordStore("printBuffer", true);
+            RecordStore record = RecordStore.openRecordStore("printBuffer", true, Defines.OPEN_READ);
             RecordEnumeration rd = record.enumerateRecords(null, null, false);
             len = 0;
             while( rd.hasNextElement() )
@@ -111,7 +110,7 @@ class Print implements Runnable
         }
 
         try {
-            URL url = new URL("http://192.168.0.32/"); //+Variables.sWiFiURL);
+            URL url = new URL("http://"+Variables.sWiFiURL+"/");
             //connection = (StreamConnection)Connector.open(url);
 /*            urlConnection = url.openConnection();
 

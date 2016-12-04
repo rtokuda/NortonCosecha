@@ -20,7 +20,7 @@ public class RecordStore {
     private boolean recordFlag = false;
     private byte[] record = null;
     public static SQLiteDatabase SQLdb = null;
-
+    public static int ChannelCount = 0;
     private RecordEnumeration re = null;
 
     public static boolean initializeRecordStore(Context contexto, boolean forceCreate) {
@@ -60,10 +60,10 @@ public class RecordStore {
         return null;
     }
 
-    public static RecordStore openRecordStore(String name, boolean createIfNecessary) //ToDo createIfNecessary
+    public static RecordStore openRecordStore(String name, boolean createIfNecessary, boolean isWrite) //ToDo createIfNecessary
     {
         RecordStore rs = new RecordStore();
-        rs.open(name, createIfNecessary);
+        rs.open(name, createIfNecessary, isWrite);
         return (rs);
     }
 
@@ -73,7 +73,7 @@ public class RecordStore {
     //ToDo
     public static RecordStore openRecordStore (String name, String vendorname, String suitname) {return null;}
 
-    public RecordStore open (String name, boolean flag)  //ToDo flag
+    public RecordStore open (String name, boolean flag, boolean isWrite)  //ToDo flag
     {
         if (SQLdb == null)
             return null;
@@ -82,6 +82,8 @@ public class RecordStore {
         try {
             SQLdb.execSQL("CREATE TABLE IF NOT EXISTS "+ recordName + " (recordID INTEGER PRIMARY KEY AUTOINCREMENT, recordData TEXT);");
         }catch(Exception e){return null;}
+        SQLdb.beginTransaction();
+        ChannelCount++;
         return this;
     }
 
@@ -90,6 +92,9 @@ public class RecordStore {
         if (SQLdb == null)
             return;
        // SQLdb.execSQL("COMMIT;");
+        SQLdb.setTransactionSuccessful();
+        SQLdb.endTransaction();
+        ChannelCount--;
         recordName = null;
     }
 

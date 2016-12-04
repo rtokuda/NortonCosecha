@@ -1,6 +1,9 @@
 package com.winetraces.nortoncosecha;
 
 
+import android.app.ProgressDialog;
+import android.widget.ProgressBar;
+
 /**
  * Created by nestor on 30/10/2016.
  */
@@ -55,7 +58,6 @@ public class Variables {
     public static String sWebServiceURL;
     public static String sMailAddr;
 
-    private boolean error;
     public static int csCount;
 
     public static int CardType = 0;
@@ -63,5 +65,6 @@ public class Variables {
     public static String errmsg = "1 ";
     public static String msg;
 //    public static SQLiteDatabase SQLdb = null;
-
+    public static ProgressDialog wProgress;
+    public static WebService ws;
 }

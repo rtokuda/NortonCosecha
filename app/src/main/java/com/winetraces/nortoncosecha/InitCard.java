@@ -24,6 +24,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.io.InputStream;
+import java.net.URL;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -41,6 +42,9 @@ public class InitCard extends AppCompatActivity {
     private ProgressDialog progress;
     private boolean grabarReady;
     private WebView waitTagView;
+    byte[] bNombre;
+    byte[] bPatente;
+    byte[] bCamion;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +61,9 @@ public class InitCard extends AppCompatActivity {
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );
         Defines.currView = mainFrame;
+        bNombre = new byte[16];
+        bPatente = new byte[16];
+        bCamion = new byte[16];
 
         progress = new ProgressDialog(this);
         progress.setCancelable(true);
@@ -87,19 +94,22 @@ public class InitCard extends AppCompatActivity {
                     editClick.setText(editData);
                     edit.setVisibility(View.INVISIBLE);
                     if (editData.length()>0) {
-                        if (Variables.CardType == Defines.T_BIN) {
-                            grabar.setEnabled(true);
-                            grabar.setAlpha(1f);
-                        }
-                        else
-                        {
-                            progress.show();
-                            progress.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        switch (Variables.CardType) {
+                            case Defines.T_BIN:
+                                grabar.setEnabled(true);
+                                grabar.setAlpha(1f);
+                                break;
+                            case Defines.T_CAMION:
+                            case Defines.T_COSECHADOR:
+                                progress.show();
+                                progress.setOnCancelListener(new DialogInterface.OnCancelListener() {
                                 @Override
-                                public void onCancel(DialogInterface dialog) {
-                                    Library.keybeep();
-                                }
-                            });
+                                    public void onCancel(DialogInterface dialog) {
+                                        Library.keybeep();
+                                    }
+                                });
+                                recuperaTarjeta(editData);
+                                break;
                         }
                     }
                     else
@@ -137,11 +147,13 @@ public class InitCard extends AppCompatActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        delayed(500);
+ //       delayed(500);
     }
-    private void delayed(int delayMillis) {
+/*    private void delayed(int delayMillis) {
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
+  */
+
     private final Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
@@ -178,7 +190,6 @@ public class InitCard extends AppCompatActivity {
                 return false;
             }
         });
-        // onBackPressed();
     }
 
     @Override
@@ -189,14 +200,13 @@ public class InitCard extends AppCompatActivity {
                 case Defines.T_COSECHADOR:
                     break;
                 case Defines.T_BIN:
-                    if (writeBin(intent))
+                case Defines.T_CAMION:
+                    if (writeCard(intent))
                     {
                         grabarReady = false;
                         waitTagView.setVisibility(View.INVISIBLE);
                         mainFrame.setAlpha(1F);
                     };
-                    break;
-                case Defines.T_CAMION:
                     break;
             }
             if (!grabarReady)
@@ -206,15 +216,42 @@ public class InitCard extends AppCompatActivity {
         }
     }
 
-    private boolean writeBin(Intent intent)
+    private void recuperaTarjeta(String data)
     {
-        byte[] block1 = {
+        if (Variables.CardType == Defines.T_CAMION) {
+            byte[] buff = Variables.ws.GetCardCamion(data, 16);
+            progress.cancel();
+            if (buff == null) {
+                progress.setMessage("Error datos");
+                return;
+            }
+            for (int i = 0; i < 16; i++) {
+                bNombre[i] = buff[i];
+                bPatente[i] = buff[i + 16];
+                bCamion[i] = buff[i + 32];
+            }
+        }
+    }
+
+
+
+    private boolean writeCard(Intent intent)
+    {
+        byte[] blockBin = {
                 (byte)0x01, (byte)0x4E, (byte)0x52, (byte)0x54,
                 (byte)0x31, (byte)0x06, (byte)0x42, (byte)0x49,
                 (byte)0x4e, (byte)0x00, (byte)0x00, (byte)0x00,
                 (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+
+        byte[] blockCamion = {
+                (byte)0x01, (byte)0x4E, (byte)0x52, (byte)0x54,
+                (byte)0x31, (byte)0x03, (byte)0x43, (byte)0x41,
+                (byte)0x4d, (byte)0x00, (byte)0x00, (byte)0x00,
+                (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+
         byte[] data = new byte[16];
         byte[] blank = new byte[16];
+        byte[] block;
         int i, j;
 
         for (i=0; i<16; i++)
@@ -225,15 +262,28 @@ public class InitCard extends AppCompatActivity {
 
         byte[] hid = MifareIO.Serial;
         String h = Library.padHex(hid[0])+Library.padHex(hid[1])+Library.padHex(hid[2])+Library.padHex(hid[3]);
-        int horaAct = NortonCosecha.GetClock();
+        int horaAct;
+        byte[] num = null;
 
-        byte[] num = editData.getBytes();
-        for (i=0; i<num.length; i++)
-            data[i] = num[i];
-        Library.toIntelDataInt(horaAct, data, 8);
         String hh = Library.padHex(data[11])+Library.padHex(data[10])+Library.padHex(data[9])+Library.padHex(data[8]);
-        String send = "00000000"+editData;
-        send = send.substring(send.length()-8, send.length())+hh;
+        String send;
+
+        switch(Variables.CardType) {
+            case Defines.T_COSECHADOR:
+                break;
+            case Defines.T_BIN:
+                horaAct = Misc.GetClock();
+                num = editData.getBytes();
+                for (i=0; i<num.length; i++)
+                    data[i] = num[i];
+                Library.toIntelDataInt(horaAct, data, 8);
+                send = "00000000" + editData;
+                send = send.substring(send.length() - 8, send.length()) + hh;
+                break;
+            case Defines.T_CAMION:
+                send = h+editData;
+                break;
+        }
 
         int paso = 0;
         int errcnt  = 0;
@@ -251,13 +301,11 @@ public class InitCard extends AppCompatActivity {
                     paso++;
                     break;
                 case 1:
-                    if (MifareIO.read(this, intent, Defines.KEY_A, 1, 1))
-                    {
+                    if (MifareIO.read(this, intent, Defines.KEY_A, 1, 1)) {
                         paso++;
                         errcnt=0;
                     }
-                    else
-                    {
+                    else {
                         paso=0;
                         errcnt++;
                     }
@@ -267,40 +315,91 @@ public class InitCard extends AppCompatActivity {
                     paso++;
                     break;
                 case 3:
-                    if (MifareIO.read(this, intent, Defines.KEY_A, 4, 1))
-                    {
+                    if (MifareIO.read(this, intent, Defines.KEY_A, 4, 1))  {
                         paso++;
                         errcnt=0;
                     }
-                    else
-                    {
+                    else {
                         paso=2;
                         errcnt++;
                     }
                     break;
                 case 4:
-                    if (MifareIO.write(this, intent, block1, Defines.KEY_A, 1))
-                    {
+                    switch (Variables.CardType) {
+                        case Defines.T_COSECHADOR:
+                            block = blank;
+                            break;
+                        case Defines.T_BIN:
+                            block = blockBin;
+                            break;
+                        case Defines.T_CAMION:
+                            block = blockCamion;
+                            break;
+                        default:
+                            block = blank;
+                            break;
+                    }
+                    if (MifareIO.write(this, intent, block, Defines.KEY_A, 1)) {
                         errcnt = 0;
                         paso++;
-                    }
-                    else
-                        errcnt++;
+                    } else errcnt++;
                     break;
                 case 5:
-                    if (MifareIO.write(this, intent, blank, Defines.KEY_A, 2))
+                    switch (Variables.CardType) {
+                        case Defines.T_COSECHADOR:
+                            block = blank;
+                            break;
+                        case Defines.T_BIN:
+                            block = blank;
+                            break;
+                        case Defines.T_CAMION:
+                            block = bNombre;
+                            break;
+                        default:
+                            block = blank;
+                            break;
+                    }
+                    if (MifareIO.write(this, intent, block, Defines.KEY_A, 2))
                         paso++;
                     else
                         errcnt++;
                     break;
                 case 6:
-                    if (MifareIO.write(this, intent, blank, Defines.KEY_A, 4))
+                    switch (Variables.CardType) {
+                        case Defines.T_COSECHADOR:
+                            block = blank;
+                            break;
+                        case Defines.T_BIN:
+                            block = blank;
+                            break;
+                        case Defines.T_CAMION:
+                            block = bPatente;
+                            break;
+                        default:
+                            block = blank;
+                            break;
+                    }
+                    if (MifareIO.write(this, intent, block, Defines.KEY_A, 4))
                         paso++;
                     else
                         errcnt++;
                     break;
                 case 7:
-                    if (MifareIO.write(this, intent, data, Defines.KEY_A, 5))
+                    switch (Variables.CardType) {
+                        case Defines.T_COSECHADOR:
+                            block = blank;
+                            break;
+                        case Defines.T_BIN:
+                            block = data;
+                            break;
+                        case Defines.T_CAMION:
+                            block = bCamion;
+                            break;
+                        default:
+                            block = blank;
+                            break;
+                    }
+                    if (MifareIO.write(this, intent, block, Defines.KEY_A, 5))
                         paso++;
                     else
                         errcnt++;
@@ -320,11 +419,24 @@ public class InitCard extends AppCompatActivity {
         }
         if (i>=100)
         {
-            //TarjetasFinca.ws.SendData("TXBIN", send);
+            switch (Variables.CardType) {
+                case Defines.T_COSECHADOR:
+                    break;
+                case Defines.T_BIN:
+                    //TarjetasFinca.ws.SendData("TXBIN", send);
+                    break;
+                case Defines.T_CAMION:
+                    //TarjetasFinca.ws.SendData("TXCAM", send);
+                    break;
+                default:
+                    block = blank;
+                    break;
+            }
             return true;
         }
         return false;
     }
+
 
     @Override
     protected void onResume() {

@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
@@ -67,6 +68,21 @@
             android:name=".Reportes"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_reportes"
+            android:theme="@style/FullscreenTheme" />
+        <activity
+            android:name=".Presentismo"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_presentismo"
+            android:theme="@style/FullscreenTheme" />
+        <activity
+            android:name=".About"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="About"
+            android:theme="@style/FullscreenTheme"></activity>
+        <activity
+            android:name=".Config"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_config"
             android:theme="@style/FullscreenTheme"></activity>
     </application>
 

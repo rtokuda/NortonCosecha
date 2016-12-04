@@ -1,5 +1,6 @@
 package com.winetraces.nortoncosecha;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -25,6 +26,7 @@ public class Cosecha {
     static String _chofer;
     static String _patente;
     static String _camion;
+    private static  ProgressDialog progress;
 
     public static boolean CardProcess(Context context, Intent intent) {
         byte i;
@@ -92,7 +94,7 @@ public class Cosecha {
         boolean flg;
 
         String hora = "";
-        horaAct = NortonCosecha.GetClock();
+        horaAct = Misc.GetClock();
         final Calendar Hoy = Library.Fecha(horaAct * 1000L);
 
         Library.byteArrayCopy(MifareIO.ReadBuff[1], Cosechador);
@@ -181,6 +183,7 @@ public class Cosecha {
         Variables.Cosechador_legajo = _legajo;
         Variables.Cosechador_count = Library.padNum(_cantidad, 3);
 
+        /*
         Thread th = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -189,6 +192,10 @@ public class Cosecha {
             }
         });
         th.start();
+*/
+        Misc.SaveConfig();
+        saveRecordCosecha(diaAct, Contador, Legajo, Cosechador, Hoy);
+
         return true;
     }
 
@@ -199,12 +206,12 @@ public class Cosecha {
         if (diaAct != (Library.fromIntelDataIntLE(Contador, 8)/86400))
         {
             Variables.Presentes++;
-            NortonCosecha.SaveConfig();
+            Misc.SaveConfig();
             RecordStore record = null;
             try {
                 byte W[] = new byte[22];
                 try {
-                    record = RecordStore.openRecordStore("Presente", true);
+                    record = RecordStore.openRecordStore("Presente", true, Defines.OPEN_WRITE);
                     W[0]=Legajo[6];
                     W[1]=Legajo[7];
                     Library.toIntelDataInt(horaAct, W, 2);
@@ -220,7 +227,7 @@ public class Cosecha {
                 String fname = "NLOG"+Integer.toString(Hoy.get(Calendar.YEAR))+
                         Library.padNum(Hoy.get(Calendar.MONTH)+1, 2)+
                         Library.padNum(Hoy.get(Calendar.DAY_OF_MONTH), 2);
-                record = RecordStore.openRecordStore(fname, true);
+                record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
 
                 byte[] datos = new byte [11];
                 datos[0] = 1;
@@ -253,7 +260,7 @@ public class Cosecha {
         int LegajoAbrev = Library.fromIntelDataWord(_legajoAbreviado, 0);
         RecordStore record = null;
         try {
-            record = RecordStore.openRecordStore("0"+LegajoAbrev,true);
+            record = RecordStore.openRecordStore("0"+LegajoAbrev,true,Defines.OPEN_WRITE);
             record.addRecord(WriteData,0,4);
             record.closeRecordStore();
             record = null;
@@ -269,7 +276,7 @@ public class Cosecha {
             String fname = "NLOG"+Integer.toString(Hoy.get(Calendar.YEAR))+
                     Library.padNum(Hoy.get(Calendar.MONTH)+1, 2)+
                     Library.padNum(Hoy.get(Calendar.DAY_OF_MONTH), 2);
-            record = RecordStore.openRecordStore(fname, true);
+            record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
 
             byte[] datos = new byte [17];
             datos[0] = 2;
@@ -304,9 +311,9 @@ public class Cosecha {
         record = null;
         try {
             String fname = "RECORD"+Integer.toString(Variables.logInx);
-            record = RecordStore.openRecordStore(fname, true);
+            record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
             byte[] buff = new byte[512];
-            horaAct = NortonCosecha.GetClock();
+            horaAct = Misc.GetClock();
             int inx = Library.setField(buff, Integer.toString(horaAct), 0, Defines.FECHA);
             inx = Library.setField(buff, Defines.R_COSECHADOR, inx, Defines.TIPO_LOG);
             inx = Library.setField(buff, Variables.Programa, inx, Defines.PROGRAMA);
@@ -382,9 +389,9 @@ public class Cosecha {
         Variables.CamionCnt++;
         RecordStore record = null;
         try {
-            record = RecordStore.openRecordStore("CamionReg", true);
+            record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
             byte[] buff = new byte[512];
-            horaAct = NortonCosecha.GetClock();
+            horaAct = Misc.GetClock();
             int inx = Library.setField(buff, Integer.toString(horaAct), 0, Defines.FECHA);
             inx = Library.setField(buff, Defines.R_CAMIONREG, inx, Defines.TIPO_LOG);
             inx = Library.setField(buff, Integer.toString(Variables.TachoCajaCnt), inx, Defines.CONTENIDO);
@@ -401,7 +408,7 @@ public class Cosecha {
             record.addRecord(buff, 0, inx);
             record.closeRecordStore();
         }catch(Exception e){e.printStackTrace();}
-        NortonCosecha.SaveConfig();
+        Misc.SaveConfig();
         Variables.TachoCajaCnt = 0;
         return true;
     }
@@ -443,9 +450,22 @@ public class Cosecha {
             else
                 msg += " bines";
         }
+
+        progress = new ProgressDialog(context);
+        progress.setCancelable(false);
+        progress.setMessage("Preparando Remito...");
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.show();
+
         PrintRemito();
+        progress.setMessage("Imprimiendo...");
+        Print pr = new Print();
+        (new Thread(pr)).start();
+        progress.cancel();
+
         Variables.CamionCnt = 0;
-        NortonCosecha.SaveConfig();
+        Misc.SaveConfig();
         Variables.msg = msg;
         /*
         NortonCosecha.backLightON(30);
@@ -458,7 +478,7 @@ public class Cosecha {
         return true;
     }
 
-    static void PrintRemito()
+   static void PrintRemito()
     {
         int tipo = 0;
         String sRemito="";
@@ -466,7 +486,8 @@ public class Cosecha {
         RecordStore recordR = null;
         RecordStore recordBK = null;
 
-        Calendar Fecha = Library.Fecha(NortonCosecha.GetClock()*1000L);
+
+        Calendar Fecha = Library.Fecha(Misc.GetClock()*1000L);
         try {
             RecordStore.deleteRecordStore("Remito");
         }catch (Exception e){}
@@ -474,7 +495,7 @@ public class Cosecha {
             RecordStore.deleteRecordStore("CamionBK"+Variables.RemitoInx);
         }catch (Exception e){}
         try {
-            recordW = RecordStore.openRecordStore("Remito", true);
+            recordW = RecordStore.openRecordStore("Remito", true, Defines.OPEN_WRITE);
             recordW.addRecord(" ");
             recordW.addRecord("Bodega Norton S.A.  Cosecha "+Fecha.get(Calendar.YEAR));
             recordW.addRecord(" ");
@@ -486,13 +507,16 @@ public class Cosecha {
             recordW.addRecord("Chofer: "+_chofer);
             recordW.addRecord(Defines.prtLine);
             Variables.Viaje++;
-            String s=" Viaje: "+Library.padNum(Variables.Viaje,3);
+            String s=" Viaje: "+Library.padNum(Fecha.get(Calendar.MONTH),2)+Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH),2)+"-"+Library.padNum(Variables.Viaje,3);
             recordW.addRecord(s);
             recordW.addRecord(Defines.prtLine);
-            recordW.addRecord("   Bin    Tachos      Hora");
-            recordW.addRecord(Defines.prtLine);
-            recordR = RecordStore.openRecordStore("CamionReg", true);
-            recordBK = RecordStore.openRecordStore("CamionBK"+Variables.RemitoInx, true);
+            if (Variables.ModoCosecha == Defines.MODO_CAJA)
+                recordW.addRecord(" Pallet   Cajas       Hora");
+            else
+                recordW.addRecord("   Bin    Tachos      Hora");
+            //recordW.addRecord(Defines.prtLine);
+            recordR = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_READ);
+            recordBK = RecordStore.openRecordStore("CamionBK"+Variables.RemitoInx, true, Defines.OPEN_WRITE);
             RecordEnumeration rd = recordR.enumerateRecords(null, null, false);
             int bines = 0;
             int tachosTot =0;
@@ -504,6 +528,7 @@ public class Cosecha {
                 String tipoLog = new String(Library.getField(rec, Defines.TIPO_LOG, true));
                 if (tipoLog.equals(Defines.R_CAMIONHDR))
                 {
+                    recordW.addRecord(Defines.prtLine);
                     s="Finca: "+new String(Library.getField(rec, Defines.R_FINCA, true))+"                         ";
                     s = s.substring(0,17);
                     s +=" Cuartel: "+new String(Library.getField(rec, Defines.R_CUARTEL, true));
@@ -551,7 +576,7 @@ public class Cosecha {
                     s += " pallets ("+tachosTot+") cajas";
             }
             recordW.addRecord(s);
-            Fecha = Library.Fecha(NortonCosecha.GetClock()*1000L);
+            Fecha = Library.Fecha(Misc.GetClock()*1000L);
             s=" Fecha: "+Fecha.get(Calendar.DAY_OF_MONTH)+"/"+
                     Defines.meses[Fecha.get(Calendar.MONTH)]+"/"+Fecha.get(Calendar.YEAR)+"  "+
                     Library.padNum(Fecha.get(Calendar.HOUR_OF_DAY),2)+":"+
@@ -570,7 +595,7 @@ public class Cosecha {
             RecordStore.deleteRecordStore("CamionReg");
         }catch (Exception e){}
         try {
-            RecordStore record = RecordStore.openRecordStore("CamionReg", true);
+            RecordStore record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
             byte[] buff = new byte[512];
             int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
             inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
@@ -587,13 +612,13 @@ public class Cosecha {
             RecordStore.deleteRecordStore("RemitoBK"+Variables.RemitoInx);
         }catch (Exception e){}
         try {
-            recordW = RecordStore.openRecordStore("printBuffer", true);
-            recordBK = RecordStore.openRecordStore("RemitoBK"+Variables.RemitoInx, true);
+            recordW = RecordStore.openRecordStore("printBuffer", true, Defines.OPEN_WRITE);
+            recordBK = RecordStore.openRecordStore("RemitoBK"+Variables.RemitoInx, true, Defines.OPEN_WRITE);
             byte[] attrib = new byte[512];
             for (int i=0; i<512; i++)
                 attrib[i] = 0;
             recordW.addRecord(attrib, 0, 512);
-            recordR = RecordStore.openRecordStore("Remito", true);
+            recordR = RecordStore.openRecordStore("Remito", true, Defines.OPEN_READ);
             RecordEnumeration rd = recordR.enumerateRecords(null, null, false);
             sRemito = "";
             while( rd.hasNextElement() )
@@ -617,8 +642,7 @@ public class Cosecha {
             recordBK.closeRecordStore();
         }catch (Exception e){};
 
-        Print pr = new Print();
-        (new Thread(pr)).start();
+        //(new Thread(pr)).start();
      /*   if (NortonCosecha.sMailAddr.length()>0)
         {
             NortonCosecha.BasicMail(sRemito);
@@ -626,6 +650,6 @@ public class Cosecha {
         Variables.RemitoInx++;
         if (Variables.RemitoInx>=20)
             Variables.RemitoInx = 0;
-        NortonCosecha.SaveConfig();
+        Misc.SaveConfig();
     }
 }

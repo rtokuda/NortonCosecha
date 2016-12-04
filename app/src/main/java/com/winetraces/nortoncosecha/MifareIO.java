@@ -104,6 +104,8 @@ public class MifareIO {
 
     public static boolean write(Context context, Intent intent, byte[]wdata, int key, int bloque)
     {
+        if (wdata == null)
+            return false;
         try {
             boolean auth = false;
             String cardData = null;

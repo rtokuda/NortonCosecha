@@ -2,6 +2,7 @@ package com.winetraces.nortoncosecha;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -30,8 +31,12 @@ public class Reportes extends AppCompatActivity {
     int _remitoInx = 0;
     public String txt[] = new String[512];
     public byte attrib[] = new byte[512];
+    public String txtBuff[][] = new String[20][512];
+    public byte attribBuff [][] = new byte[20][512];
+
     int prtInx = 0;
     private SpannableStringBuilder viewText = null;
+    private ProgressDialog progress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +48,15 @@ public class Reportes extends AppCompatActivity {
         view = (TextView)findViewById(R.id.textView);
 
         viewText = new SpannableStringBuilder();
+        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.hide();
+        }
+        mBackground.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        );
+
         switch(Variables.PrintType)
         {
             case Defines.RP_COSECHADOR:
@@ -64,22 +78,22 @@ public class Reportes extends AppCompatActivity {
                 }
                 String s = "RemitoBK"+_remitoInx;
                 try {
-                    RecordStore record = RecordStore.openRecordStore(s, true);
+                    RecordStore record = RecordStore.openRecordStore(s, true, Defines.OPEN_READ);
                     if (record.getNumRecords()> 0)
                         Reimpresion(s);
                     record.closeRecordStore();
                 }catch (Exception e){}
+                Variables.wProgress.cancel();
                 break;
         }
-        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.hide();
-        }
-        mBackground.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        );
     }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState)
+    {
+        super.onPostCreate(savedInstanceState);
+    }
+
 
 
     public void buttonLeftClick(View target)
@@ -98,7 +112,7 @@ public class Reportes extends AppCompatActivity {
             String s = "RemitoBK" + _remitoInx;
             RecordStore record = null;
             try {
-                record = RecordStore.openRecordStore(s, true);
+                record = RecordStore.openRecordStore(s, true, Defines.OPEN_READ);
                 if (record.getNumRecords() > 0) {
                     Reimpresion(s);
                     break;
@@ -129,7 +143,7 @@ public class Reportes extends AppCompatActivity {
             String s = "RemitoBK" + _remitoInx;
             RecordStore record = null;
             try {
-                record = RecordStore.openRecordStore(s, true);
+                record = RecordStore.openRecordStore(s, true, Defines.OPEN_READ);
                 if (record.getNumRecords() > 0) {
                     Reimpresion(s);
                     break;
@@ -156,7 +170,6 @@ public class Reportes extends AppCompatActivity {
         Library.keybeep();
         Print pr = new Print();
         (new Thread(pr)).start();
-
     }
 
     private void getImage(String file)
@@ -200,7 +213,7 @@ public class Reportes extends AppCompatActivity {
         for (int i=0;i<512; i++)
             attrib[i] = 0;
         try {
-            RecordStore record = RecordStore.openRecordStore(Remito, true);
+            RecordStore record = RecordStore.openRecordStore(Remito, true, Defines.OPEN_READ);
             RecordEnumeration rd = record.enumerateRecords(null, null, false);
             prtInx = 0;
             while( rd.hasNextElement() )
@@ -223,7 +236,7 @@ public class Reportes extends AppCompatActivity {
             RecordStore.deleteRecordStore("printBuffer");
         }catch (Exception e){}
         try {
-            RecordStore record = RecordStore.openRecordStore("printBuffer", true);
+            RecordStore record = RecordStore.openRecordStore("printBuffer", true, Defines.OPEN_WRITE);
             record.addRecord(attrib, 0, 512);
             for (int i=0; i<prtInx; i++)
             {
@@ -236,7 +249,7 @@ public class Reportes extends AppCompatActivity {
 
     void prt_hdr(String Cuadrilla)
     {
-        Calendar Hoy = Library.Fecha(NortonCosecha.GetClock()*1000L);
+        Calendar Hoy = Library.Fecha(Misc.GetClock()*1000L);
         txt[prtInx++]=" ";
         txt[prtInx++]="Bodega Norton S.A.  Cosecha "+Hoy.get(Calendar.YEAR);
         txt[prtInx++]=" ";
@@ -249,19 +262,13 @@ public class Reportes extends AppCompatActivity {
 
     void prt_footer()
     {
-        Calendar Hoy = Library.Fecha(NortonCosecha.GetClock()*1000L);
+        Calendar Hoy = Library.Fecha(Misc.GetClock()*1000L);
         txt[prtInx++]=" ";
         txt[prtInx++]="Impreso: "+Library.padNum(Hoy.get(Calendar.DAY_OF_MONTH),2)+"/"+
                 (Defines.meses[Hoy.get(Calendar.MONTH)])+"/"+Hoy.get(Calendar.YEAR)+"  "+
                 Library.padNum(Hoy.get(Calendar.HOUR_OF_DAY),2)+":"+
                 Library.padNum(Hoy.get(Calendar.MINUTE),2)+":"+
                 Library.padNum(Hoy.get(Calendar.SECOND),2);
-    }
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState)
-    {
-        super.onPostCreate(savedInstanceState);
     }
 
     @Override
@@ -280,7 +287,7 @@ public class Reportes extends AppCompatActivity {
     }
 
     private PendingIntent createPendingIntent() {
-        Intent intent = new Intent(this, Menu.class);
+        Intent intent = new Intent(this, Reportes.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
                 | Intent.FLAG_ACTIVITY_NEW_TASK);
         return PendingIntent.getActivity(this, 0, intent, 0);

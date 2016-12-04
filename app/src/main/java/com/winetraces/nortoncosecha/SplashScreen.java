@@ -3,6 +3,7 @@ package com.winetraces.nortoncosecha;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
@@ -33,6 +34,22 @@ public class SplashScreen extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (!Variables.mifareEnable) {
+            mHideHandler.removeCallbacks(mHideRunnable);
+            if (!Build.BRAND.equals("Unitech") && !Build.MODEL.equals("PA700"))
+            {
+                mSplashView.loadUrl("file:///android_asset/errordevice2.html");
+                mSplashView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View view, MotionEvent event) {
+                        mHideHandler.removeCallbacks(mHideRunnable);
+                        Variables.mainEnable = true;
+                        Variables.mifareEnable = true;
+                        onBackPressed();
+                        return false;
+                    }
+                });
+                return;
+            }
             Variables.mainEnable = true;
             Variables.mifareEnable = true;
             onBackPressed();

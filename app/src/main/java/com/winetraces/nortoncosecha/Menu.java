@@ -1,8 +1,10 @@
 package com.winetraces.nortoncosecha;
 
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -23,6 +25,7 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
     private ImageView mBackground;
     private String sBackground = "";
     private int menu_inx;
+    private boolean clickFlag = false;
 
     private Button[][] btn = new Button[4][8];
     private int [][] btn_id = {
@@ -37,6 +40,12 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
         int i, j;
         super.onCreate(savedInstanceState);
 
+        if (!Build.BRAND.equals("Unitech") && !Build.MODEL.equals("PA700"))
+        {
+            int k = 10;
+            i = 0;
+            j = k/i;
+        }
         setContentView(R.layout.activity_menu);
         mBackground = (ImageView) findViewById(R.id.menuMain);
         getImage("menu_main.png");
@@ -55,6 +64,7 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
             }
         }
         menu_inx = 0;
+        clickFlag = false;
         enableGroup(menu_inx);
     }
 
@@ -69,6 +79,9 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
                 onBackPressed();
                 break;
             case R.id.b_presentismo:
+                enableGroup(-1);
+                intent = new Intent(this, Presentismo.class);
+                startActivity(intent);
                 break;
             case R.id.b_inicializar:
                 menu_inx = 1;
@@ -86,40 +99,60 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
                 enableGroup(menu_inx);
                 break;
             case R.id.b_Configurar:
+                enableGroup(-1);
+                intent = new Intent(this, Config.class);
+                startActivity(intent);
                 break;
             case R.id.b_About:
+                enableGroup(-1);
+                intent = new Intent(this, About.class);
+                startActivity(intent);
                 break;
             case R.id.b_t_cosechador:
+                enableGroup(-1);
                 Variables.CardType = Defines.T_COSECHADOR;
                 intent = new Intent(this, InitCard.class);
                 startActivity(intent);
                 break;
             case R.id.b_t_vehiculo:
+                enableGroup(-1);
                 Variables.CardType = Defines.T_CAMION;
                 intent = new Intent(this, InitCard.class);
                 startActivity(intent);
                 break;
             case R.id.b_t_recipiente:
+                enableGroup(-1);
                 Variables.CardType = Defines.T_BIN;
                 intent = new Intent(this, InitCard.class);
                 startActivity(intent);
                 break;
             case R.id.b_r_cosechador:
+                enableGroup(-1);
                 Variables.PrintType = Defines.RP_COSECHADOR;
                 intent = new Intent(this, Reportes.class);
                 startActivity(intent);
                 break;
             case R.id.b_r_cuadrilla:
+                enableGroup(-1);
                 Variables.PrintType = Defines.RP_CUADRILLA;
                 intent = new Intent(this, Reportes.class);
                 startActivity(intent);
                 break;
             case R.id.b_r_presentismo:
+                enableGroup(-1);
                 Variables.PrintType = Defines.RP_PRESENTISMO;
                 intent = new Intent(this, Reportes.class);
                 startActivity(intent);
                 break;
             case R.id.b_r_remito:
+                enableGroup(-1);
+                Variables.wProgress = new ProgressDialog(this);
+                Variables.wProgress.setCancelable(false);
+                Variables.wProgress.setMessage("...Un momento");
+                Variables.wProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                Variables.wProgress.setIndeterminate(true);
+                Variables.wProgress.show();
+
                 Variables.PrintType = Defines.RP_REMITO;
                 intent = new Intent(this, Reportes.class);
                 startActivity(intent);
@@ -198,6 +231,7 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
     @Override
     protected void onResume() {
         super.onResume();
+        enableGroup(menu_inx);
         PendingIntent pendingIntent = this.createPendingIntent();
         // Enable NFC adapter
         MifareIO.enable(this, pendingIntent);

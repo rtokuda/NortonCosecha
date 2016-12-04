@@ -19,4 +19,8 @@
     <string name="title_activity_init_card">InitCard</string>
 
     <string name="title_activity_reportes">Reportes</string>
+
+    <string name="title_activity_presentismo">Presentismo</string>
+
+    <string name="title_activity_config">Config</string>
 </resources>
