@@ -2,7 +2,9 @@ package com.winetraces.nortoncosecha;
 
 
 import android.app.ProgressDialog;
+import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 /**
  * Created by nestor on 30/10/2016.
@@ -66,5 +68,10 @@ public class Variables {
     public static String msg;
 //    public static SQLiteDatabase SQLdb = null;
     public static ProgressDialog wProgress;
+    public static String url;
+
     public static WebService ws;
+    static public View currView = null;
+    static public String msgTxt = "";
+
 }

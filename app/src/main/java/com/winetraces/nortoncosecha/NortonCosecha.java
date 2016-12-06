@@ -46,7 +46,7 @@ public class NortonCosecha extends AppCompatActivity {
         mMainView = findViewById(R.id.mainScreen);
         mBackground = (ImageView) findViewById(R.id.background);
         getImage("wait_programa.png");
-        Defines.currView = mBackground;
+        Variables.currView = mBackground;
 
         mNombre = (TextView) findViewById(R.id.cosechador_nombre);
         mCount = (TextView) findViewById(R.id.cosechador_count);
@@ -132,21 +132,7 @@ public class NortonCosecha extends AppCompatActivity {
                 }
             });
             th.start();
-
-        String s1 = Build.BRAND;
-        String s2 = Build.DEVICE;
-        String s3 = Build.DISPLAY;
-        String s4 = Build.HARDWARE;
-        String s5 = Build.ID;
-        String s6 = Build.MANUFACTURER;
-        String s7 = Build.MODEL;
-        String s8 = Build.PRODUCT;
-        String s9 = Build.SERIAL;
-
-
-
         Variables.ws = new WebService();
-
     }
 
     private void getImage(String file)
@@ -243,18 +229,17 @@ public class NortonCosecha extends AppCompatActivity {
                 mBackground.setVisibility(View.VISIBLE);
             }
             if (Variables.ModoCosecha == Defines.MODO_TACHO) {
-                if (!sBackground.equals("cosechando_tacho.png"))
-                    getImage("cosechando_tacho.png");
+                getImage("cosechando_tacho.png");
                 mBackground.setVisibility(View.VISIBLE);
             }
             else {
-                if (!sBackground.equals("cosechando_caja.png"))
-                    getImage("cosechando_caja.png");
+                getImage("cosechando_caja.png");
                 mBackground.setVisibility(View.VISIBLE);
             }
             setPrograma.setText(Variables.Programa);
         }
         else {
+            getImage("wait_programa.png");
             mBackground.setVisibility(View.VISIBLE);
             setPrograma.setText(R.string.program_name);
         }
@@ -262,28 +247,36 @@ public class NortonCosecha extends AppCompatActivity {
 
     public void refreshScreenCosecha()
     {
-        if (!Variables.bFlagCosecha)
+        if (!Variables.bFlagCosecha || !Variables.ProgSel) {
+            Variables.CosechadorLastTime = -1;
+            mCosechadorTimer.setVisibility(View.INVISIBLE);
+            mNombre.setText(" ");
+            mCount.setText(" ");
+            mLegajo.setText(" ");
+            count1.setText(" ");
+            count2.setText(" ");
+            count3.setText(" ");
+            count4.setText(" ");
+            count5.setText(" ");
+            count6.setText(" ");
             return;
+        }
         mNombre.setText(Variables.Cosechador_name);
         mCount.setText(Variables.Cosechador_count);
         mLegajo.setText(Variables.Cosechador_legajo);
+        count1.setText(Library.padNum(Variables.TachoCajaCnt,3));
+        count3.setText(Library.padNum(Variables.TotalTachos,3));
+        count4.setText(Library.padNum(Variables.CamionCnt,3));
+        count6.setText(Library.padNum(Variables.BinCnt,3));
         if (Variables.ModoCosecha == Defines.MODO_TACHO)
         {
-            count1.setText(Library.padNum(Variables.TachoCajaCnt,3));
             count2.setText(Library.padNum(Variables.Tachos4Bin,3));
-            count3.setText(Library.padNum(Variables.TotalTachos,3));
-            count4.setText(Library.padNum(Variables.CamionCnt,3));
             count5.setText(Library.padNum(Variables.Bin4Camion,3));
-            count6.setText(Library.padNum(Variables.BinCnt,3));
         }
         else
         {
-            count1.setText(Library.padNum(Variables.TachoCajaCnt,3));
             count2.setText(Library.padNum(Variables.Cajas4Pallet,3));
-            count3.setText(Library.padNum(Variables.TotalTachos,3));
-            count4.setText(Library.padNum(Variables.CamionCnt,3));
             count5.setText(Library.padNum(Variables.Pallet4Camion,3));
-            count6.setText(Library.padNum(Variables.BinCnt,3));
         }
         setPrograma.setText(Variables.Programa);
         if  (Variables.CosechadorLastTime > 0) {

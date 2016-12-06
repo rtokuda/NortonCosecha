@@ -55,7 +55,7 @@ public class Programa extends AppCompatActivity {
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );
-        Defines.currView = mBackground;
+        Variables.currView = mBackground;
 
         horaAct = Misc.GetClock();
         try {
@@ -228,7 +228,7 @@ public class Programa extends AppCompatActivity {
         byte datos[]=new byte[10];
 
         Library.keybeep();
-        if (Variables.TachoCajaCnt != 0)
+        if ((Variables.TachoCajaCnt != 0) && Variables.ProgSel)
         {
             Library.alert (this, "Atención", "Debe cerrar el bin para cambiar el programa", android.R.drawable.ic_dialog_alert);
             return;
@@ -246,7 +246,7 @@ public class Programa extends AppCompatActivity {
                 Variables.CuadrillaPrg = txt[ProgInx][4];
                 Variables.ModoCosecha = Integer.parseInt(txt[ProgInx][7]);
                 Variables.VariedadUva = txt[ProgInx][8];
-                //NortonCosecha.TachoCajaCnt = 0;
+                Variables.TachoCajaCnt = 0;
                 try {
                     record = RecordStore.openRecordStore("ProgSel",true, Defines.OPEN_WRITE);
                     byte dd[] = prg[ProgInx].getBytes();

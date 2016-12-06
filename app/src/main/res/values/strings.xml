@@ -23,4 +23,6 @@
     <string name="title_activity_presentismo" translatable="false">Presentismo</string>
 
     <string name="title_activity_config" translatable="false">Config</string>
+
+    <string name="title_activity_descarga_red" translatable="false">descarga_red</string>
 </resources>

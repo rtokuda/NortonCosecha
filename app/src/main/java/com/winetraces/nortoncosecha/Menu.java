@@ -151,6 +151,14 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
                 startActivity(intent);
                 break;
             case R.id.b_d_red:
+                if ((Variables.TachoCajaCnt != 0) && Variables.ProgSel)
+                {
+                    Library.alert (this, "Atención", "Debe cerrar el bin para sincronizar con el servidor", android.R.drawable.ic_dialog_alert);
+                    return;
+                }
+                enableGroup(-1);
+                intent = new Intent(this, DescargaRed.class);
+                startActivity(intent);
                 break;
             case R.id.b_d_sd:
                 // Save_SD.save(this);

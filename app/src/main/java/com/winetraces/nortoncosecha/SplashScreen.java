@@ -34,7 +34,7 @@ public class SplashScreen extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (!Variables.mifareEnable) {
+        if (!Variables.mifareEnable && MifareIO.connect(this, intent)) {
             if (!ValidCard(this, intent))
                 return;
             mHideHandler.removeCallbacks(mHideRunnable);
@@ -146,10 +146,11 @@ public class SplashScreen extends Activity {
         Library.byteArrayCopy(CardId, 6, aux, 0);
         String s = new String(aux);
 
-        if (s.equals(Defines.THDR_CHANGE) && (CardId[5] == 4)) {
+        return true;
+/*        if (s.equals(Defines.THDR_CHANGE) && (CardId[5] == 4)) {
             Variables.CardType = Defines.T_CHANGE;
             return true;
         }
-        return false;
+        return false;*/
     }
 }

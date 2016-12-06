@@ -366,7 +366,7 @@ public class Library {
             public void onClick(DialogInterface dialog, int wich) {
                 Library.keybeep();
                 dialog.cancel();
-                Defines.currView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                Variables.currView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 );
@@ -377,7 +377,6 @@ public class Library {
         Button b = alertDialog.getButton(Dialog.BUTTON_NEGATIVE);
         b.setBackgroundColor(Color.LTGRAY);
     }
-
 /*
     @SuppressWarnings("deprecation")
     public static Spanned fromHtml(String source)

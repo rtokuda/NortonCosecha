@@ -1,7 +1,5 @@
 package com.winetraces.nortoncosecha;
 
-import android.view.View;
-
 /**
  * Created by nestor on 05/11/2016.
  */
@@ -18,6 +16,7 @@ public class Defines {
 
     public final static boolean CardTest = false;
     public final static boolean TimeTest = false;
+    public final static boolean CommTest = false;
 
     public final static int NO_ERROR = 0;
     public final static int ERROR_CARD_BADFORMAT = 1;
@@ -83,8 +82,6 @@ public class Defines {
 
     static public final boolean OPEN_WRITE = true;
     static public final boolean OPEN_READ = false;
-
-    static public View currView = null;
 
     static public final String prtLine = "--------------------------------------";
     static public final String[] meses = {"Ene","Feb","Mar","Abr","May","Jun",

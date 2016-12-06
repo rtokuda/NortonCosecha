@@ -5,7 +5,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,9 +21,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
+import com.winetraces.recordstore.RecordStore;
 import java.io.InputStream;
-import java.net.URL;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -34,6 +32,7 @@ public class InitCard extends AppCompatActivity {
     private ImageView mBackground;
     private RelativeLayout mainFrame;
     private EditText edit;
+    private TextView text1, text2, text3;
     private String sBackground = "";
     private Button editClick, grabar;
     private InputMethodManager imm;
@@ -42,9 +41,8 @@ public class InitCard extends AppCompatActivity {
     private ProgressDialog progress;
     private boolean grabarReady;
     private WebView waitTagView;
-    byte[] bNombre;
-    byte[] bPatente;
-    byte[] bCamion;
+    private Context context;
+    byte[] bNombre, bLegajo, bPatente, bCamion;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +58,16 @@ public class InitCard extends AppCompatActivity {
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );
-        Defines.currView = mainFrame;
+        text1 = (TextView)findViewById(R.id.text1);
+        text2 = (TextView)findViewById(R.id.text2);
+        text3 = (TextView)findViewById(R.id.text3);
+        Variables.currView = mainFrame;
+        context = this;
+
         bNombre = new byte[16];
         bPatente = new byte[16];
         bCamion = new byte[16];
+        bLegajo = new byte[16];
 
         progress = new ProgressDialog(this);
         progress.setCancelable(true);
@@ -131,7 +135,6 @@ public class InitCard extends AppCompatActivity {
             case Defines.T_BIN:
                 getImage("t_bin_ini.png");
                 edit.setInputType(EditorInfo.TYPE_CLASS_NUMBER);
-                //editNum.setImeActionLabel();
                 break;
             case Defines.T_CAMION:
                 getImage("t_truck_ini.png");
@@ -147,12 +150,7 @@ public class InitCard extends AppCompatActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
- //       delayed(500);
     }
-/*    private void delayed(int delayMillis) {
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
-    }
-  */
 
     private final Runnable mHideRunnable = new Runnable() {
         @Override
@@ -196,44 +194,112 @@ public class InitCard extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (grabarReady && MifareIO.connect(this, intent)) {
-            switch (Variables.CardType) {
-                case Defines.T_COSECHADOR:
-                    break;
-                case Defines.T_BIN:
-                case Defines.T_CAMION:
-                    if (writeCard(intent))
-                    {
-                        grabarReady = false;
-                        waitTagView.setVisibility(View.INVISIBLE);
-                        mainFrame.setAlpha(1F);
-                    };
-                    break;
-            }
-            if (!grabarReady)
+            if (writeCard(intent))
             {
-                Library.alert(this, "Información", "La tarjeta se grabó EXITOSAMENTE", android.R.drawable.ic_dialog_info);
+                waitTagView.setVisibility(View.INVISIBLE);
+                mainFrame.setAlpha(1F);
+                Library.alert(context, "Información", "La tarjeta se grabó EXITOSAMENTE", android.R.drawable.ic_dialog_info);
             }
         }
     }
 
-    private void recuperaTarjeta(String data)
+    private void recuperaTarjeta(final String data)
     {
         if (Variables.CardType == Defines.T_CAMION) {
-            byte[] buff = Variables.ws.GetCardCamion(data, 16);
-            progress.cancel();
-            if (buff == null) {
-                progress.setMessage("Error datos");
-                return;
-            }
-            for (int i = 0; i < 16; i++) {
-                bNombre[i] = buff[i];
-                bPatente[i] = buff[i + 16];
-                bCamion[i] = buff[i + 32];
-            }
+            progress.setMessage("...Recuperando tarjeta");
+            progress.show();
+            Thread th = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    byte[] buff = Variables.ws.GetCardCamion(data, 16);
+                    if (buff == null) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                progress.cancel();
+                                Library.alert(context, "Atención", "DATO INVÁLIDO", android.R.drawable.ic_dialog_alert);
+                                text1.setText("");
+                                text2.setText("");
+                                text3.setText("");
+                                grabar.setEnabled(false);
+                                grabar.setAlpha(0.3f);
+                            }
+                        });
+                        return;
+                    }
+                    for (int i = 0; i < 16; i++) {
+                        bNombre[i] = buff[i];
+                        bPatente[i] = buff[i + 16];
+                        bCamion[i] = buff[i + 32];
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            text1.setText(new String(bNombre));
+                            text2.setText(new String(bPatente));
+                            text3.setText(new String(bCamion));
+                            progress.cancel();
+                            grabar.setEnabled(true);
+                            grabar.setAlpha(1f);
+                        }
+                    });
+                }
+            });
+            th.start();
+        }
+        else if (Variables.CardType == Defines.T_COSECHADOR) {
+            progress.setMessage("...Recuperando tarjeta");
+            progress.show();
+            Thread th = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    byte[] buff = Variables.ws.GetCardCosechador(data, 16);
+                    if (buff == null) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                progress.cancel();
+                                Library.alert(context, "Atención", "DATO INVÁLIDO", android.R.drawable.ic_dialog_alert);
+                                text1.setText("");
+                                text2.setText("");
+                                text3.setText("");
+                                grabar.setEnabled(false);
+                                grabar.setAlpha(0.3f);
+                            }
+                        });
+                        return;
+                    }
+                    for (int i = 0; i < 16; i++) {
+                        bNombre[i] = buff[i];
+                        bLegajo[i] = buff[i + 16];
+                    }
+                    int inx = -1;
+                    byte[] bApellido = new byte[16];
+                    for (int i=0; i<16; i++)
+                    {
+                        if (bNombre[i] == 32)
+                            inx = i;
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            text1.setText(new String(bNombre));
+                            text2.setText(data);
+                            progress.cancel();
+                            grabar.setEnabled(true);
+                            grabar.setAlpha(1f);
+                            int iLegajo = Integer.parseInt(data);
+                            iLegajo -= 230000;
+                            iLegajo &= 0xffff;
+                            bLegajo[6] = (byte)(iLegajo & 0xff);
+                            bLegajo[7] = (byte)((iLegajo>>8) & 0xff);
+                        }
+                    });
+                }
+            });
+            th.start();
         }
     }
-
-
 
     private boolean writeCard(Intent intent)
     {
@@ -248,6 +314,13 @@ public class InitCard extends AppCompatActivity {
                 (byte)0x31, (byte)0x03, (byte)0x43, (byte)0x41,
                 (byte)0x4d, (byte)0x00, (byte)0x00, (byte)0x00,
                 (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+
+        byte[] blockCosechador = {
+                (byte)0x01, (byte)0x4E, (byte)0x52, (byte)0x54,
+                (byte)0x31, (byte)0x01, (byte)0x43, (byte)0x43,
+                (byte)0x48, (byte)0x00, (byte)0x00, (byte)0x00,
+                (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+
 
         byte[] data = new byte[16];
         byte[] blank = new byte[16];
@@ -327,7 +400,7 @@ public class InitCard extends AppCompatActivity {
                 case 4:
                     switch (Variables.CardType) {
                         case Defines.T_COSECHADOR:
-                            block = blank;
+                            block = blockCosechador;
                             break;
                         case Defines.T_BIN:
                             block = blockBin;
@@ -347,7 +420,7 @@ public class InitCard extends AppCompatActivity {
                 case 5:
                     switch (Variables.CardType) {
                         case Defines.T_COSECHADOR:
-                            block = blank;
+                            block = bNombre;
                             break;
                         case Defines.T_BIN:
                             block = blank;
@@ -387,7 +460,7 @@ public class InitCard extends AppCompatActivity {
                 case 7:
                     switch (Variables.CardType) {
                         case Defines.T_COSECHADOR:
-                            block = blank;
+                            block = bLegajo;
                             break;
                         case Defines.T_BIN:
                             block = data;
@@ -421,12 +494,13 @@ public class InitCard extends AppCompatActivity {
         {
             switch (Variables.CardType) {
                 case Defines.T_COSECHADOR:
+                    //SendData("TXCCH", send);
                     break;
                 case Defines.T_BIN:
-                    //TarjetasFinca.ws.SendData("TXBIN", send);
+                    //SendData("TXBIN", send);
                     break;
                 case Defines.T_CAMION:
-                    //TarjetasFinca.ws.SendData("TXCAM", send);
+                    //SendData("TXCAM", send);
                     break;
                 default:
                     block = blank;
@@ -437,6 +511,15 @@ public class InitCard extends AppCompatActivity {
         return false;
     }
 
+    public void SendData(String type, String Data)
+    {
+        try {
+            RecordStore record = RecordStore.openRecordStore(type+Misc.GetClock(), true, Defines.OPEN_WRITE);
+            record.addRecord(Data.getBytes(), 0, Data.length());
+            record.closeRecordStore();
+        }catch (Exception e){};
+
+    }
 
     @Override
     protected void onResume() {

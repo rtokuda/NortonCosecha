@@ -2,34 +2,32 @@ package com.winetraces.nortoncosecha;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import java.io.InputStream;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class About extends AppCompatActivity {
+public class DescargaRed extends AppCompatActivity {
     private ImageView mBackground;
-    private TextView versionID, androidID;
     private String sBackground = null;
+    private TextView vLog;
+    int WaitTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         int i, j;
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_about);
-        mBackground = (ImageView) findViewById(R.id.aboutMain);
-        versionID = (TextView) findViewById(R.id.version);
-        androidID = (TextView) findViewById(R.id.androidID);
+        setContentView(R.layout.activity_descarga_red);
+        mBackground = (ImageView) findViewById(R.id.DescargaRedMain);
+        vLog = (TextView)findViewById(R.id.detalle);
 
         android.support.v7.app.ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -39,15 +37,45 @@ public class About extends AppCompatActivity {
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );
-        getImage("about.png");
-        versionID.setText("Ver. "+BuildConfig.VERSION_NAME+" NORTON\r\n   SPANISH VERSION");
-        androidID.setText(Library.padHex(Variables.DeviceID, 8));
+        getImage("webconnect.png");
+        Variables.msgTxt = "Conectando...\r\n";
+        Thread th = new Thread(new Runnable() {
+            String lastMsg = "";
+            @Override
+            public void run() {
+                while (true) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!Variables.msgTxt.equals(lastMsg)) {
+                                vLog.setText(Variables.msgTxt);
+                                lastMsg = Variables.msgTxt;
+                            }
+                        }
+                    });
+                    try {
+                        Thread.sleep(200);
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        });
+        th.start();
     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState)
     {
         super.onPostCreate(savedInstanceState);
+        Thread th = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Variables.ws.SendData();
+                Variables.ws.GetConfig();
+                Variables.ws.GetPrograma();
+            }
+        });
+        th.start();
     }
 
 

@@ -26,7 +26,7 @@ public class Cosecha {
     static String _chofer;
     static String _patente;
     static String _camion;
-    private static  ProgressDialog progress;
+    //private static  ProgressDialog progress;
 
     public static boolean CardProcess(Context context, Intent intent) {
         byte i;
@@ -96,7 +96,6 @@ public class Cosecha {
         String hora = "";
         horaAct = Misc.GetClock();
         final Calendar Hoy = Library.Fecha(horaAct * 1000L);
-
         Library.byteArrayCopy(MifareIO.ReadBuff[1], Cosechador);
         for (i = 0; i < 16; i++) {
             MifareIO.ReadBuff[0][i] = 0;
@@ -451,18 +450,25 @@ public class Cosecha {
                 msg += " bines";
         }
 
-        progress = new ProgressDialog(context);
+      /*  progress = new ProgressDialog(context);
         progress.setCancelable(false);
         progress.setMessage("Preparando Remito...");
         progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progress.setIndeterminate(true);
         progress.show();
+*/
+        Variables.wProgress = new ProgressDialog(context);
+        Variables.wProgress.setCancelable(false);
+        Variables.wProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        Variables.wProgress.setIndeterminate(true);
+        Variables.wProgress.setMessage("...Imprimiendo");
+        Variables.wProgress.show();
 
         PrintRemito();
-        progress.setMessage("Imprimiendo...");
+        //progress.setMessage("Imprimiendo...");
         Print pr = new Print();
         (new Thread(pr)).start();
-        progress.cancel();
+        //progress.cancel();
 
         Variables.CamionCnt = 0;
         Misc.SaveConfig();
