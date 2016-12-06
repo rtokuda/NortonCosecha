@@ -96,6 +96,7 @@ class Print implements Runnable
             print(" ");
         }
         SocketClose();
+        Variables.wProgress.cancel();
         running = false;
     }
 

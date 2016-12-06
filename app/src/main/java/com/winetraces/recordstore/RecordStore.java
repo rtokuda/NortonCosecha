@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.util.Arrays;
 
@@ -18,6 +19,7 @@ import static com.winetraces.recordstore.RecordStore.SQLdb;
 public class RecordStore {
     private String recordName = null;
     private boolean recordFlag = false;
+    private boolean writeFlag = false;
     private byte[] record = null;
     public static SQLiteDatabase SQLdb = null;
     public static int ChannelCount = 0;
@@ -78,12 +80,43 @@ public class RecordStore {
         if (SQLdb == null)
             return null;
         recordName = "rd_"+name;
+        Log.d("Recordstore", "Open "+recordName);
         recordFlag = flag;
+        writeFlag = isWrite; //ToDo buffer en memoria si es readonly
+
         try {
-            SQLdb.execSQL("CREATE TABLE IF NOT EXISTS "+ recordName + " (recordID INTEGER PRIMARY KEY AUTOINCREMENT, recordData TEXT);");
-        }catch(Exception e){return null;}
-        SQLdb.beginTransaction();
+            SQLdb.execSQL("CREATE TABLE IF NOT EXISTS " + recordName + " (recordID INTEGER PRIMARY KEY AUTOINCREMENT, recordData TEXT);");
+        } catch (Exception e) {
+            return null;
+        }
+
+
+     /*   if (isWrite) {
+            try {
+                SQLdb.execSQL("CREATE TABLE IF NOT EXISTS " + recordName + " (recordID INTEGER PRIMARY KEY AUTOINCREMENT, recordData TEXT);");
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        else {
+            try {
+                Cursor cursor = SQLdb.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table' AND name=" + recordName, null);
+                if (cursor != null) {
+                    if (cursor.getCount() > 0) {
+                        cursor.close();
+                        ChannelCount++;
+                        SQLdb.beginTransaction();
+                        return this;
+                    }
+                    cursor.close();
+                    return null;
+                }
+            } catch (Exception e) {
+                return null;
+            }
+        }*/
         ChannelCount++;
+        SQLdb.beginTransaction();
         return this;
     }
 
@@ -94,6 +127,7 @@ public class RecordStore {
        // SQLdb.execSQL("COMMIT;");
         SQLdb.setTransactionSuccessful();
         SQLdb.endTransaction();
+        Log.d("Recordstore", "Close "+recordName);
         ChannelCount--;
         recordName = null;
     }

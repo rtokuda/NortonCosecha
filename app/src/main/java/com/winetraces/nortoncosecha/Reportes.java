@@ -29,10 +29,11 @@ public class Reportes extends AppCompatActivity {
     private TextView view;
     private String sBackground = "";
     int _remitoInx = 0;
+    int _remitoCnt = 0;
     public String txt[] = new String[512];
     public byte attrib[] = new byte[512];
-    public String txtBuff[][] = new String[20][512];
-    public byte attribBuff [][] = new byte[20][512];
+    public String txtBuff[][] = new String[Defines.MAX_REPORTES][512];
+    public byte attribBuff [][] = new byte[Defines.MAX_REPORTES][512];
 
     int prtInx = 0;
     private SpannableStringBuilder viewText = null;
@@ -70,19 +71,15 @@ public class Reportes extends AppCompatActivity {
                 break;
             case Defines.RP_REMITO:
                 getImage("print_remito.png");
-                _remitoInx = Variables.RemitoInx;
-                _remitoInx--;
-                if (_remitoInx < 0)
-                {
-                    _remitoInx = 19;
+                readRemitos();
+                if (_remitoCnt > 0) {
+                    _remitoInx = Variables.RemitoInx;
+                    _remitoInx--;
+                    if (_remitoInx < 0) {
+                        _remitoInx = Defines.MAX_REPORTES - 1;
+                    }
+                    Reimpresion();
                 }
-                String s = "RemitoBK"+_remitoInx;
-                try {
-                    RecordStore record = RecordStore.openRecordStore(s, true, Defines.OPEN_READ);
-                    if (record.getNumRecords()> 0)
-                        Reimpresion(s);
-                    record.closeRecordStore();
-                }catch (Exception e){}
                 Variables.wProgress.cancel();
                 break;
         }
@@ -94,7 +91,35 @@ public class Reportes extends AppCompatActivity {
         super.onPostCreate(savedInstanceState);
     }
 
+    private void readRemitos()
+    {
+        int i;
+        String s;
+        RecordStore rc;
 
+        _remitoCnt = 0;
+        for (i=0; i<Defines.MAX_REPORTES; i++)
+            txtBuff[i][0] = null;
+        for (i=0; i<Defines.MAX_REPORTES; i++)
+        {
+            s = "RemitoBK"+i;
+            rc = RecordStore.openRecordStore(s, false, Defines.OPEN_READ);
+            if (rc != null)
+            {
+                RecordEnumeration rd = rc.enumerateRecords(null, null, false);
+                int j =0;
+                while( rd.hasNextElement() )
+                {
+                    int ID = rd.nextRecordId();
+                    byte[] rec = rc.getRecord(ID);
+                    txtBuff[i][j++]= new String(rec);
+                }
+                txtBuff[i][j]= null;
+                _remitoCnt++;
+                rc.closeRecordStore();
+            }
+        }
+    }
 
     public void buttonLeftClick(View target)
     {
@@ -103,29 +128,16 @@ public class Reportes extends AppCompatActivity {
         Library.keybeep();
 
         int _remitobk = _remitoInx;
-        for (int i=0; i<20; i++) {
+        for (int i=0; i<Defines.MAX_REPORTES; i++) {
             _remitoInx--;
             if (_remitoInx < 0)
-                _remitoInx = 19;
+                _remitoInx = Defines.MAX_REPORTES-1;
+            if (txtBuff[_remitoInx][0] != null)
+                break;
             if (_remitoInx == _remitobk)
                 break;
-            String s = "RemitoBK" + _remitoInx;
-            RecordStore record = null;
-            try {
-                record = RecordStore.openRecordStore(s, true, Defines.OPEN_READ);
-                if (record.getNumRecords() > 0) {
-                    Reimpresion(s);
-                    break;
-                }
-                else
-                    _remitoInx = _remitobk;
-            } catch (Exception e) {
-            }
-            try {
-                record.closeRecordStore();
-            } catch (Exception e) {
-            }
         }
+        Reimpresion();
     }
 
     public void buttonRightClick(View target)
@@ -134,29 +146,16 @@ public class Reportes extends AppCompatActivity {
             return;
         Library.keybeep();
         int _remitobk = _remitoInx;
-        for (int i=0; i<20; i++) {
+        for (int i=0; i<Defines.MAX_REPORTES; i++) {
             _remitoInx++;
-            if (_remitoInx >= 20)
+            if (_remitoInx >= Defines.MAX_REPORTES)
                 _remitoInx = 0;
+            if (txtBuff[_remitoInx][0] != null)
+                break;
             if (_remitoInx == _remitobk)
                 break;
-            String s = "RemitoBK" + _remitoInx;
-            RecordStore record = null;
-            try {
-                record = RecordStore.openRecordStore(s, true, Defines.OPEN_READ);
-                if (record.getNumRecords() > 0) {
-                    Reimpresion(s);
-                    break;
-                }
-                else
-                    _remitoInx = _remitobk;
-            } catch (Exception e) {
-            }
-            try {
-                record.closeRecordStore();
-            } catch (Exception e) {
-            }
         }
+        Reimpresion();
     }
 
     public void salirClick(View target)
@@ -168,6 +167,13 @@ public class Reportes extends AppCompatActivity {
     public void imprimirClick(View target)
     {
         Library.keybeep();
+        Variables.wProgress = new ProgressDialog(this);
+        Variables.wProgress.setCancelable(false);
+        Variables.wProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        Variables.wProgress.setIndeterminate(true);
+        Variables.wProgress.setMessage("...Imprimiendo");
+        Variables.wProgress.show();
+        save_prtbuff();
         Print pr = new Print();
         (new Thread(pr)).start();
     }
@@ -208,25 +214,21 @@ public class Reportes extends AppCompatActivity {
         view.setText(viewText);
     }
 
-    void Reimpresion(String Remito)
+    void Reimpresion()
     {
-        for (int i=0;i<512; i++)
+        int i;
+
+        for (i=0;i<512; i++)
             attrib[i] = 0;
-        try {
-            RecordStore record = RecordStore.openRecordStore(Remito, true, Defines.OPEN_READ);
-            RecordEnumeration rd = record.enumerateRecords(null, null, false);
-            prtInx = 0;
-            while( rd.hasNextElement() )
-            {
-                int ID = rd.nextRecordId();
-                byte[] rec = record.getRecord(ID);
-                txt[prtInx++]= new String(rec);
-            }
-            record.closeRecordStore();
+        i = 0;
+        prtInx = 0;
+        for (;;) {
+            if (txtBuff[_remitoInx][i]==null)
+                break;
+            txt[prtInx++] = txtBuff[_remitoInx][i++];
         }
-        catch (Exception e){}
         prt_footer();
-        save_prtbuff();
+        //save_prtbuff();
         view_list();
     }
 

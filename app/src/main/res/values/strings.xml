@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NortonCosecha</string>
+    <string name="app_name">The Harvest</string>
     <string name="app_version">Norton Cosecha Versión 3.00a</string>
     <string name="app_enabled">¡Aplicación Habilitada!</string>
     <string name="app_please_enable">Por favor, habilite la aplicación</string>
     <string name="nombreApellido">Nombre Apellido</string>
     <string name="err_CardInvalid">Tarjeta Invalida</string>
 
-    <string name="title_activity_programa">Programa</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_programa" translatable="false">Programa</string>
+    <string name="dummy_button" translatable="false">Dummy Button</string>
+    <string name="dummy_content" translatable="false">DUMMY\nCONTENT</string>
     <string name="program_name">PROGRAMA DE COSECHA</string>
 
-    <string name="title_activity_menu">menu</string>
+    <string name="title_activity_menu" translatable="false">menu</string>
 
-    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="title_activity_splash_screen" translatable="false">SplashScreen</string>
 
-    <string name="title_activity_init_card">InitCard</string>
+    <string name="title_activity_init_card" translatable="false">InitCard</string>
 
-    <string name="title_activity_reportes">Reportes</string>
+    <string name="title_activity_reportes" translatable="false">Reportes</string>
 
-    <string name="title_activity_presentismo">Presentismo</string>
+    <string name="title_activity_presentismo" translatable="false">Presentismo</string>
 
-    <string name="title_activity_config">Config</string>
+    <string name="title_activity_config" translatable="false">Config</string>
 </resources>

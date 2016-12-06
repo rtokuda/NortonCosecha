@@ -40,12 +40,6 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
         int i, j;
         super.onCreate(savedInstanceState);
 
-        if (!Build.BRAND.equals("Unitech") && !Build.MODEL.equals("PA700"))
-        {
-            int k = 10;
-            i = 0;
-            j = k/i;
-        }
         setContentView(R.layout.activity_menu);
         mBackground = (ImageView) findViewById(R.id.menuMain);
         getImage("menu_main.png");
@@ -152,7 +146,6 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
                 Variables.wProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 Variables.wProgress.setIndeterminate(true);
                 Variables.wProgress.show();
-
                 Variables.PrintType = Defines.RP_REMITO;
                 intent = new Intent(this, Reportes.class);
                 startActivity(intent);

@@ -648,7 +648,7 @@ public class Cosecha {
             NortonCosecha.BasicMail(sRemito);
         }*/
         Variables.RemitoInx++;
-        if (Variables.RemitoInx>=20)
+        if (Variables.RemitoInx>=Defines.MAX_REPORTES)
             Variables.RemitoInx = 0;
         Misc.SaveConfig();
     }

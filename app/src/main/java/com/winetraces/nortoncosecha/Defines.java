@@ -14,6 +14,8 @@ public class Defines {
     public final static int MODO_TACHO = 0;
     public final static int MODO_CAJA = 1;
 
+    public final static int MAX_REPORTES = 20;
+
     public final static boolean CardTest = false;
     public final static boolean TimeTest = false;
 

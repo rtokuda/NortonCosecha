@@ -1,6 +1,7 @@
 package com.winetraces.nortoncosecha;
 
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -11,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
@@ -103,6 +105,7 @@ public class NortonCosecha extends AppCompatActivity {
                                      tmp = Variables.DiffTime;
                                  }
                                  diff = tmp;
+
                                  runOnUiThread(new Runnable() {
                                      @Override
                                      public void run() {
@@ -110,12 +113,14 @@ public class NortonCosecha extends AppCompatActivity {
                                              @Override
                                              public void run() {
                                                  mCosechadorTimer.setProgress(diff);
-                                                 if (RecordStore.ChannelCount!=0)
+                                                 if (RecordStore.ChannelCount!=0) {
                                                      Toast.makeText(NortonCosecha.this, "Error Canal Recordstore", Toast.LENGTH_SHORT).show();
+                                                 }
                                              }
                                          });
                                      }
                                  });
+
                              }
 
                          }
