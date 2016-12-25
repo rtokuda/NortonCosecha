@@ -7,8 +7,8 @@ android {
         applicationId "com.winetraces.nortoncosecha"
         minSdkVersion 18
         targetSdkVersion 24
-        versionCode 7
-        versionName "1.02r05a"
+        versionCode 8
+        versionName "1.02r06a"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
