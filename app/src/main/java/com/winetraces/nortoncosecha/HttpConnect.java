@@ -45,8 +45,8 @@ public class HttpConnect implements Runnable
         InputStream is = null;
         boolean flag = false;
         running = true;
-        error = 0;
         sWebData = "";
+        error = 0;
         try {
             URL wURL = new URL(Variables.url);
             conn = (HttpURLConnection) wURL.openConnection();
