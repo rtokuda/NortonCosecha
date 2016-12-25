@@ -25,4 +25,6 @@
     <string name="title_activity_config" translatable="false">Config</string>
 
     <string name="title_activity_descarga_red" translatable="false">descarga_red</string>
+
+    <string name="title_activity_descarga_sd" translatable="false">DescargaSD</string>
 </resources>

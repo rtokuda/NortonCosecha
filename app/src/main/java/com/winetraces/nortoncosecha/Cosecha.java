@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.winetraces.recordstore.RecordEnumeration;
 import com.winetraces.recordstore.RecordStore;
@@ -22,6 +23,9 @@ public class Cosecha {
     private static int _legajoAbrev;
     private static String _cosechador;
     private static byte[] _legajoAbreviado = new byte[2];
+    private static byte[] buff = new byte[512];
+    private static int inx;
+
     int counter;
     static String _chofer;
     static String _patente;
@@ -93,9 +97,11 @@ public class Cosecha {
         int i;
         boolean flg;
 
+        if (Variables.writeTiming > 0)
+            return false;
         String hora = "";
         horaAct = Misc.GetClock();
-        final Calendar Hoy = Library.Fecha(horaAct * 1000L);
+       // final Calendar Hoy = Library.Fecha(horaAct * 1000L);
         Library.byteArrayCopy(MifareIO.ReadBuff[1], Cosechador);
         for (i = 0; i < 16; i++) {
             MifareIO.ReadBuff[0][i] = 0;
@@ -143,7 +149,7 @@ public class Cosecha {
         _legajoAbrev = Library.Ubyte(Legajo[6]) + Library.Ubyte(Legajo[7]) * 256;
 
         int diff = (horaAct % 86400) - ((int) (TimeAnt % 86400L));
-        int DiffTime = Variables.DiffTime;
+        int DiffTime = Variables.WaitCardTime;
         if (diff < 0) {
             diff = DiffTime;
             if (-diff > DiffTime)
@@ -154,8 +160,10 @@ public class Cosecha {
             Variables.Cosechador_name = _cosechador;
             Variables.Cosechador_legajo = _legajo;
             Variables.Cosechador_count = Library.padNum(_cantidad - 1, 3);
+            Variables.Cosechador_waiting = true;
             return true;
         }
+        Variables.Cosechador_waiting = false;
         Variables.CosechadorLastTime = horaAct;
         final int diaAct = horaAct / 86400;
         if (diaAct != (Library.fromIntelDataIntLE(Contador, 8) / 86400))
@@ -165,7 +173,17 @@ public class Cosecha {
         Library.toIntelDataInt(_total, WriteData, 4);
         Library.toIntelDataInt(horaAct, WriteData, 8);
         Library.byteArrayCopy(WriteData, wd[0]);
-        if (!MifareIO.write(contexto, intent, wd, Defines.KEY_A, 4, 1))
+        for (i=0; i<3; i++) {
+            if (MifareIO.write(contexto, intent, wd, Defines.KEY_A, 4, 1))
+                break;
+            try {
+                Thread.sleep(100);
+            } catch (Exception e) {
+            }
+        }
+        if (i>0)
+            Log.d("CARD","Retry write");
+        if (i >= 3)
             return false;
         Calendar Fecha = Library.Fecha(TimeAnt * 1000L);
         int hh = Fecha.get(Calendar.HOUR_OF_DAY);
@@ -182,162 +200,143 @@ public class Cosecha {
         Variables.Cosechador_legajo = _legajo;
         Variables.Cosechador_count = Library.padNum(_cantidad, 3);
 
-        /*
         Thread th = new Thread(new Runnable() {
             @Override
             public void run() {
-                NortonCosecha.SaveConfig();
-                saveRecordCosecha(diaAct, Contador, Legajo, Cosechador, Hoy);
+                Variables.writeTiming = 1;
+                Misc.SaveConfig();
+/*                for (int i=0; i<200; i++) {
+                    horaAct += 33;
+                    saveRecordCosecha(diaAct, Contador, Legajo, Cosechador, Hoy);
+                    if ((i & 31) == 31)
+                    {
+                        Log.d("SEND FAKE", " "+i);
+                    }
+                }
+                horaAct += 1000;*/
+                saveRecordCosecha(diaAct, Contador, Legajo, Cosechador);
+                Variables.writeTiming = 0;
             }
         });
         th.start();
-*/
-        Misc.SaveConfig();
-        saveRecordCosecha(diaAct, Contador, Legajo, Cosechador, Hoy);
-
         return true;
     }
 
-    private static void saveRecordCosecha(int diaAct, byte[]Contador, byte[] Legajo, byte[]Cosechador, Calendar Hoy)
+    private static void saveRecordCosecha(int diaAct, byte[]Contador, byte[] Legajo, byte[]Cosechador)
     {
         byte[] WriteData = new byte[16];
+        RecordStore record;
+        String fname;
+
+        horaAct = Misc.GetClock();
+        Calendar Hoy = Library.Fecha(horaAct * 1000L);
 
         if (diaAct != (Library.fromIntelDataIntLE(Contador, 8)/86400))
         {
             Variables.Presentes++;
             Misc.SaveConfig();
-            RecordStore record = null;
-            try {
-                byte W[] = new byte[22];
-                try {
-                    record = RecordStore.openRecordStore("Presente", true, Defines.OPEN_WRITE);
-                    W[0]=Legajo[6];
-                    W[1]=Legajo[7];
+            byte W[] = new byte[22];
+            record = RecordStore.openRecordStore("Presente", true, Defines.OPEN_WRITE);
+
+            /*horaAct -= (86400 * 100);
+            for (int i=0; i<100; i++) {
+                byte k = Legajo[7];
+                for (int j=0; j<50; j++) {
+                    W[0] = Legajo[6];
+                    W[1] = Legajo[7];
+                    Legajo[7]++;
                     Library.toIntelDataInt(horaAct, W, 2);
                     Library.byteArrayCopy(Cosechador, 0, W, 6);
                     record.addRecord(W, 0, 22);
-                    record.closeRecordStore();
-                }catch (Exception e)
-                {
-                    if (record != null)
-                        record.closeRecordStore();
                 }
-                record = null;
-                String fname = "NLOG"+Integer.toString(Hoy.get(Calendar.YEAR))+
-                        Library.padNum(Hoy.get(Calendar.MONTH)+1, 2)+
-                        Library.padNum(Hoy.get(Calendar.DAY_OF_MONTH), 2);
-                record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
+                horaAct+= 86400;
+            }*/
 
-                byte[] datos = new byte [11];
-                datos[0] = 1;
+            W[0] = Legajo[6];
+            W[1] = Legajo[7];
+            Library.toIntelDataInt(horaAct, W, 2);
+            Library.byteArrayCopy(Cosechador, 0, W, 6);
+            record.addRecord(W, 0, 22);
 
-                byte[] aux = new byte[4];
-                Library.toIntelDataInt(Variables.DeviceID, aux, 0);
-                aux = Library.arrayInvert(aux);
-                Library.byteArrayCopy(aux, 0, datos, 1);
-
-                datos[5]=_legajoAbreviado[0];
-                datos[6]=_legajoAbreviado[1];
-
-                Library.toIntelDataInt(horaAct, aux, 0);
-                aux = Library.arrayInvert(aux);
-                Library.byteArrayCopy(aux, 0, datos, 7);
-
-                record.addRecord(datos, 0, 11);
-                record.closeRecordStore();
-                record = null;
-
-            }catch(Exception e){}
-            if (record != null)
-            {
-                try{
-                    record.closeRecordStore();
-                }catch(Exception e){}
-            }
-        }
-        Library.toIntelDataInt(horaAct, WriteData, 0);
-        int LegajoAbrev = Library.fromIntelDataWord(_legajoAbreviado, 0);
-        RecordStore record = null;
-        try {
-            record = RecordStore.openRecordStore("0"+LegajoAbrev,true,Defines.OPEN_WRITE);
-            record.addRecord(WriteData,0,4);
             record.closeRecordStore();
-            record = null;
-        } catch (Exception e){}
-        if (record != null)
-        {
-            try {
-                record.closeRecordStore();
-            }catch(Exception e){}
-        }
-        record = null;
-        try {
-            String fname = "NLOG"+Integer.toString(Hoy.get(Calendar.YEAR))+
+
+            fname = "NLOG"+Integer.toString(Hoy.get(Calendar.YEAR))+
                     Library.padNum(Hoy.get(Calendar.MONTH)+1, 2)+
                     Library.padNum(Hoy.get(Calendar.DAY_OF_MONTH), 2);
             record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
 
-            byte[] datos = new byte [17];
-            datos[0] = 2;
+            byte[] datos = new byte [11];
+            datos[0] = 1;
 
-            byte[] aux = Variables.ProgID.getBytes();
+            byte[] aux = new byte[4];
+            Library.toIntelDataInt(Variables.DeviceID, aux, 0);
+            aux = Library.arrayInvert(aux);
             Library.byteArrayCopy(aux, 0, datos, 1);
 
-            aux = new byte[4];
-            Library.toIntelDataInt(Variables.DeviceID, aux, 0);
+            datos[5]=_legajoAbreviado[0];
+            datos[6]=_legajoAbreviado[1];
+
+            Library.toIntelDataInt(horaAct, aux, 0);
             aux = Library.arrayInvert(aux);
             Library.byteArrayCopy(aux, 0, datos, 7);
 
-            datos[11]=_legajoAbreviado[0];
-            datos[12]=_legajoAbreviado[1];
-
-            aux = new byte[4];
-            Library.toIntelDataInt(horaAct, aux, 0);
-            aux = Library.arrayInvert(aux);
-            Library.byteArrayCopy(aux, 0, datos, 13);
-
-            record.addRecord(datos, 0, 17);
+            record.addRecord(datos, 0, 11);
             record.closeRecordStore();
-            record = null;
+        }
 
-        }catch(Exception e){e.printStackTrace();}
-        if (record != null)
-        {
-            try {
-                record.closeRecordStore();
-            }catch(Exception e){}
-        }
-        record = null;
-        try {
-            String fname = "RECORD"+Integer.toString(Variables.logInx);
-            record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
-            byte[] buff = new byte[512];
-            horaAct = Misc.GetClock();
-            int inx = Library.setField(buff, Integer.toString(horaAct), 0, Defines.FECHA);
-            inx = Library.setField(buff, Defines.R_COSECHADOR, inx, Defines.TIPO_LOG);
-            inx = Library.setField(buff, Variables.Programa, inx, Defines.PROGRAMA);
-            inx = Library.setField(buff, Variables.Finca, inx, Defines.FINCA);
-            inx = Library.setField(buff, Variables.Cuadrilla, inx, Defines.CUADRILLA);
-            inx = Library.setField(buff, Variables.CuadrillaPrg, inx, Defines.CUADRILLAPRG);
-            inx = Library.setField(buff, Variables.VariedadUva, inx, Defines.VARIEDAD);
-            inx = Library.setField(buff, Variables.Cuartel, inx, Defines.CUARTEL);
-            inx = Library.setField(buff, Variables.Area, inx, Defines.AREA);
-            inx = Library.setField(buff, _legajo, inx, Defines.LEGAJO);
-            inx = Library.setField(buff, _cosechador, inx, Defines.NOMBRE);
-            inx = Library.setField(buff, Integer.toString(_cantidad), inx, Defines.CANTIDAD);
-            inx = Library.setField(buff, Integer.toString(_total), inx, Defines.TOTAL);
-            inx = Library.setField(buff, Integer.toString(_legajoAbrev), inx, Defines.LEGAJOABREV);
-            record.addRecord(buff, 0, inx);
-            record.closeRecordStore();
-            record = null;
-        }catch(Exception e){e.printStackTrace();}
-        if (record != null)
-        {
-            try {
-                record.closeRecordStore();
-            }catch(Exception e){}
-        }
-        record = null;
+        Library.toIntelDataInt(horaAct, WriteData, 0);
+        int LegajoAbrev = Library.fromIntelDataWord(_legajoAbreviado, 0);
+        record = RecordStore.openRecordStore("0"+LegajoAbrev,true,Defines.OPEN_WRITE);
+        record.addRecord(WriteData,0,4);
+        record.closeRecordStore();
+
+        fname = "NLOG"+Integer.toString(Hoy.get(Calendar.YEAR))+
+                Library.padNum(Hoy.get(Calendar.MONTH)+1, 2)+
+                Library.padNum(Hoy.get(Calendar.DAY_OF_MONTH), 2);
+        record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
+
+        byte[] datos = new byte [17];
+        datos[0] = 2;
+
+        byte[] aux = Variables.ProgID.getBytes();
+        Library.byteArrayCopy(aux, 0, datos, 1);
+
+        aux = new byte[4];
+        Library.toIntelDataInt(Variables.DeviceID, aux, 0);
+        aux = Library.arrayInvert(aux);
+        Library.byteArrayCopy(aux, 0, datos, 7);
+
+        datos[11]=_legajoAbreviado[0];
+        datos[12]=_legajoAbreviado[1];
+
+        aux = new byte[4];
+        Library.toIntelDataInt(horaAct, aux, 0);
+        aux = Library.arrayInvert(aux);
+        Library.byteArrayCopy(aux, 0, datos, 13);
+
+        record.addRecord(datos, 0, 17);
+        record.closeRecordStore();
+
+        fname = "RECORD"+Integer.toString(Variables.logInx);
+        record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
+        byte[] buff = new byte[512];
+        horaAct = Misc.GetClock();
+        int inx = Library.setField(buff, Integer.toString(horaAct), 0, Defines.FECHA);
+        inx = Library.setField(buff, Defines.R_COSECHADOR, inx, Defines.TIPO_LOG);
+        inx = Library.setField(buff, Variables.Programa, inx, Defines.PROGRAMA);
+        inx = Library.setField(buff, Variables.Finca, inx, Defines.FINCA);
+        inx = Library.setField(buff, Variables.Cuadrilla, inx, Defines.CUADRILLA);
+        inx = Library.setField(buff, Variables.CuadrillaPrg, inx, Defines.CUADRILLAPRG);
+        inx = Library.setField(buff, Variables.VariedadUva, inx, Defines.VARIEDAD);
+        inx = Library.setField(buff, Variables.Cuartel, inx, Defines.CUARTEL);
+        inx = Library.setField(buff, Variables.Area, inx, Defines.AREA);
+        inx = Library.setField(buff, _legajo, inx, Defines.LEGAJO);
+        inx = Library.setField(buff, _cosechador, inx, Defines.NOMBRE);
+        inx = Library.setField(buff, Integer.toString(_cantidad), inx, Defines.CANTIDAD);
+        inx = Library.setField(buff, Integer.toString(_total), inx, Defines.TOTAL);
+        inx = Library.setField(buff, Integer.toString(_legajoAbrev), inx, Defines.LEGAJOABREV);
+        record.addRecord(buff, 0, inx);
+        record.closeRecordStore();
     }
 
     private static boolean CambiaBin(Context context, Intent intent, boolean flag) {
@@ -386,29 +385,35 @@ public class Cosecha {
 
         Variables.BinCnt++;
         Variables.CamionCnt++;
-        RecordStore record = null;
-        try {
-            record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
-            byte[] buff = new byte[512];
-            horaAct = Misc.GetClock();
-            int inx = Library.setField(buff, Integer.toString(horaAct), 0, Defines.FECHA);
-            inx = Library.setField(buff, Defines.R_CAMIONREG, inx, Defines.TIPO_LOG);
-            inx = Library.setField(buff, Integer.toString(Variables.TachoCajaCnt), inx, Defines.CONTENIDO);
-            if (flag)
-            {
-                String s = Variables.BinNumber+"              ";
-                s = s.substring(1, 8);
-                inx = Library.setField(buff, s, inx, Defines.BINCODE);
+
+        horaAct = Misc.GetClock();
+        inx = Library.setField(buff, Integer.toString(horaAct), 0, Defines.FECHA);
+        inx = Library.setField(buff, Defines.R_CAMIONREG, inx, Defines.TIPO_LOG);
+        inx = Library.setField(buff, Integer.toString(Variables.TachoCajaCnt), inx, Defines.CONTENIDO);
+        if (flag) {
+            String s = Variables.BinNumber + "              ";
+            s = s.substring(1, 8);
+            inx = Library.setField(buff, s, inx, Defines.BINCODE);
+        } else
+            inx = Library.setField(buff, "99" + Library.padNum(Historico, 6), inx, Defines.BINCODE);
+        inx = Library.setField(buff, Integer.toString(Variables.CamionCnt), inx, Defines.CAMIONCNT);
+        inx = Library.setField(buff, Integer.toString(Variables.ModoCosecha), inx, Defines.MODO_COSECHA);
+
+        Thread th = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Variables.writeTiming = 1;
+                RecordStore record = null;
+                record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
+                record.addRecord(buff, 0, inx);
+                record.closeRecordStore();
+                Misc.SaveConfig();
+                Variables.writeTiming = 0;
+                Variables.TachoCajaCnt = 0;
             }
-            else
-                inx = Library.setField(buff, "99"+Library.padNum(Historico,6), inx, Defines.BINCODE);
-            inx = Library.setField(buff, Integer.toString(Variables.CamionCnt), inx, Defines.CAMIONCNT);
-            inx = Library.setField(buff, Integer.toString(Variables.ModoCosecha), inx, Defines.MODO_COSECHA);
-            record.addRecord(buff, 0, inx);
-            record.closeRecordStore();
-        }catch(Exception e){e.printStackTrace();}
-        Misc.SaveConfig();
-        Variables.TachoCajaCnt = 0;
+        });
+        th.start();
+        Variables.Cosechador_waiting = false;
         return true;
     }
 
@@ -449,38 +454,20 @@ public class Cosecha {
             else
                 msg += " bines";
         }
+        Thread th = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Variables.writeTiming = 1;
+                PrintRemito();
+                Variables.CamionCnt = 0;
+                Misc.SaveConfig();
+                Variables.writeTiming = 0;
+            }
+        });
+        th.start();
 
-      /*  progress = new ProgressDialog(context);
-        progress.setCancelable(false);
-        progress.setMessage("Preparando Remito...");
-        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progress.setIndeterminate(true);
-        progress.show();
-*/
-        Variables.wProgress = new ProgressDialog(context);
-        Variables.wProgress.setCancelable(false);
-        Variables.wProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        Variables.wProgress.setIndeterminate(true);
-        Variables.wProgress.setMessage("...Imprimiendo");
-        Variables.wProgress.show();
-
-        PrintRemito();
-        //progress.setMessage("Imprimiendo...");
-        Print pr = new Print();
-        (new Thread(pr)).start();
-        //progress.cancel();
-
-        Variables.CamionCnt = 0;
-        Misc.SaveConfig();
         Variables.msg = msg;
-        /*
-        NortonCosecha.backLightON(30);
-        Alert alert = new Alert("Informacion", msg, null, AlertType.INFO);
-        alert.setTimeout(Alert.FOREVER);
-        alert.setCommandListener(this);
-        NortonCosecha.display.setCurrent(alert);
-        enable = false;
-        */
+        Variables.Cosechador_waiting = false;
         return true;
     }
 
@@ -491,168 +478,151 @@ public class Cosecha {
         RecordStore recordW = null;
         RecordStore recordR = null;
         RecordStore recordBK = null;
-
+        RecordEnumeration rd;
 
         Calendar Fecha = Library.Fecha(Misc.GetClock()*1000L);
-        try {
-            RecordStore.deleteRecordStore("Remito");
-        }catch (Exception e){}
-        try {
-            RecordStore.deleteRecordStore("CamionBK"+Variables.RemitoInx);
-        }catch (Exception e){}
-        try {
-            recordW = RecordStore.openRecordStore("Remito", true, Defines.OPEN_WRITE);
-            recordW.addRecord(" ");
-            recordW.addRecord("Bodega Norton S.A.  Cosecha "+Fecha.get(Calendar.YEAR));
-            recordW.addRecord(" ");
-            recordW.addRecord("       Cuadrilla - "+Variables.Cuadrilla);
-            recordW.addRecord(" ");
-            recordW.addRecord("Remito de transporte");
-            recordW.addRecord("Camion: "+_camion);
-            recordW.addRecord("Patente: "+_patente);
-            recordW.addRecord("Chofer: "+_chofer);
-            recordW.addRecord(Defines.prtLine);
-            Variables.Viaje++;
-            String s=" Viaje: "+Library.padNum(Fecha.get(Calendar.MONTH),2)+Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH),2)+"-"+Library.padNum(Variables.Viaje,3);
-            recordW.addRecord(s);
-            recordW.addRecord(Defines.prtLine);
-            if (Variables.ModoCosecha == Defines.MODO_CAJA)
-                recordW.addRecord(" Pallet   Cajas       Hora");
-            else
-                recordW.addRecord("   Bin    Tachos      Hora");
-            //recordW.addRecord(Defines.prtLine);
-            recordR = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_READ);
-            recordBK = RecordStore.openRecordStore("CamionBK"+Variables.RemitoInx, true, Defines.OPEN_WRITE);
-            RecordEnumeration rd = recordR.enumerateRecords(null, null, false);
-            int bines = 0;
-            int tachosTot =0;
-            while( rd.hasNextElement() )
-            {
-                int ID = rd.nextRecordId();
-                byte[] rec = recordR.getRecord(ID);
-                recordBK.addRecord(rec, 0, rec.length);
-                String tipoLog = new String(Library.getField(rec, Defines.TIPO_LOG, true));
-                if (tipoLog.equals(Defines.R_CAMIONHDR))
-                {
-                    recordW.addRecord(Defines.prtLine);
-                    s="Finca: "+new String(Library.getField(rec, Defines.R_FINCA, true))+"                         ";
-                    s = s.substring(0,17);
-                    s +=" Cuartel: "+new String(Library.getField(rec, Defines.R_CUARTEL, true));
-                    recordW.addRecord(s);
-                    s="Area: "+new String(Library.getField(rec, Defines.R_AREA, true))+"                            ";
-                    s = s.substring(0,17);
-                    s+="Variedad: "+new String(Library.getField(rec, Defines.R_VARIEDAD, true));
-                    recordW.addRecord(s);
-                }
-                if (tipoLog.equals(Defines.R_CAMIONREG))
-                {
-                    try {
-                        int hora = Integer.parseInt(new String(Library.getField(rec, Defines.FECHA, true)));
-                        Fecha = Library.Fecha(hora*1000L);
-                        int cnt = Integer.parseInt(new String(Library.getField(rec, Defines.CAMIONCNT, true)));
-                        s = Library.padNum(cnt, 3);
-                        s += " "+new String(Library.getField(rec, Defines.BINCODE, true));
-                        int tachos = Integer.parseInt(new String(Library.getField(rec, Defines.CONTENIDO, true)));
-                        tachosTot+=tachos;
-                        s += "    "+Library.padNum(tachos, 2);
-                        s += "    "+Library.padNum(Fecha.get(Calendar.HOUR_OF_DAY),2)+":"+
-                                Library.padNum(Fecha.get(Calendar.MINUTE),2)+":"+
-                                Library.padNum(Fecha.get(Calendar.SECOND),2);
-                    }catch (Exception e){s = "ERROR BIN";}
+        RecordStore.deleteRecordStore("Remito");
+        RecordStore.deleteRecordStore("CamionBK"+Variables.RemitoInx);
 
-                    recordW.addRecord(s);
-                    tipo = Integer.parseInt(new String(Library.getField(rec, Defines.MODO_COSECHA, true)));
-                    bines++;
-                }
-            }
-            recordW.addRecord(Defines.prtLine);
-            s = "Total "+bines;
-            if (tipo == Defines.MODO_TACHO)
-            {
-                if (bines == 1)
-                    s += " bin ("+tachosTot+") tachos";
-                else
-                    s += " bines ("+tachosTot+") tachos";
-            }
-            else
-            {
-                if (bines == 1)
-                    s += " pallet ("+tachosTot+") cajas";
-                else
-                    s += " pallets ("+tachosTot+") cajas";
-            }
-            recordW.addRecord(s);
-            Fecha = Library.Fecha(Misc.GetClock()*1000L);
-            s=" Fecha: "+Fecha.get(Calendar.DAY_OF_MONTH)+"/"+
-                    Defines.meses[Fecha.get(Calendar.MONTH)]+"/"+Fecha.get(Calendar.YEAR)+"  "+
-                    Library.padNum(Fecha.get(Calendar.HOUR_OF_DAY),2)+":"+
-                    Library.padNum(Fecha.get(Calendar.MINUTE),2)+":"+
-                    Library.padNum(Fecha.get(Calendar.SECOND),2);
-            recordW.addRecord(s);
-            recordW.addRecord(Defines.prtLine);
-        }catch(Exception e){e.printStackTrace();}
-        try {
-            recordW.closeRecordStore();
-            recordR.closeRecordStore();
-            recordBK.closeRecordStore();
-        }catch(Exception e){};
+        recordW = RecordStore.openRecordStore("Remito", true, Defines.OPEN_WRITE);
+        recordW.addRecord(" ");
+        recordW.addRecord("Bodega Norton S.A.  Cosecha "+Fecha.get(Calendar.YEAR));
+        recordW.addRecord(" ");
+        recordW.addRecord("       Cuadrilla - "+Variables.Cuadrilla);
+        recordW.addRecord(" ");
+        recordW.addRecord("Remito de transporte");
+        recordW.addRecord("Camion: "+_camion);
+        recordW.addRecord("Patente: "+_patente);
+        recordW.addRecord("Chofer: "+_chofer);
+        recordW.addRecord(Defines.prtLine);
+        Variables.Viaje++;
+        String s=" Viaje: "+Library.padNum(Fecha.get(Calendar.MONTH)+1,2)+Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH),2)+"-"+Library.padNum(Variables.Viaje,3);
+        recordW.addRecord(s);
+        recordW.addRecord(Defines.prtLine);
+        //ToDo Si cambia de programa y es de otro modo, agregar header
+        if (Variables.ModoCosecha == Defines.MODO_CAJA)
+            recordW.addRecord(" Pallet   Cajas       Hora");
+        else
+            recordW.addRecord("   Bin    Tachos      Hora");
+        //recordW.addRecord(Defines.prtLine);
 
-        try {
-            RecordStore.deleteRecordStore("CamionReg");
-        }catch (Exception e){}
-        try {
-            RecordStore record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
-            byte[] buff = new byte[512];
-            int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
-            inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
-            inx = Library.setField(buff, Variables.Cuartel, inx, Defines.R_CUARTEL);
-            inx = Library.setField(buff, Variables.Area, inx, Defines.R_AREA);
-            inx = Library.setField(buff, Variables.VariedadUva, inx, Defines.R_VARIEDAD);
-            record.addRecord(buff, 0, inx);
-            record.closeRecordStore();
-        }catch(Exception e){e.printStackTrace();}
-        try {
-            RecordStore.deleteRecordStore("printBuffer");
-        }catch (Exception e){}
-        try {
-            RecordStore.deleteRecordStore("RemitoBK"+Variables.RemitoInx);
-        }catch (Exception e){}
-        try {
-            recordW = RecordStore.openRecordStore("printBuffer", true, Defines.OPEN_WRITE);
-            recordBK = RecordStore.openRecordStore("RemitoBK"+Variables.RemitoInx, true, Defines.OPEN_WRITE);
-            byte[] attrib = new byte[512];
-            for (int i=0; i<512; i++)
-                attrib[i] = 0;
-            recordW.addRecord(attrib, 0, 512);
-            recordR = RecordStore.openRecordStore("Remito", true, Defines.OPEN_READ);
-            RecordEnumeration rd = recordR.enumerateRecords(null, null, false);
-            sRemito = "";
-            while( rd.hasNextElement() )
+        recordR = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_READ);
+        recordBK = RecordStore.openRecordStore("CamionBK"+Variables.RemitoInx, true, Defines.OPEN_WRITE);
+        rd = recordR.enumerateRecords(null, null, false);
+        int bines = 0;
+        int tachosTot =0;
+        while( rd.hasNextElement() )
+        {
+            int ID = rd.nextRecordId();
+            byte[] rec = recordR.getRecord(ID);
+            recordBK.addRecord(rec, 0, rec.length);
+            String tipoLog = new String(Library.getField(rec, Defines.TIPO_LOG, true));
+            if (tipoLog.equals(Defines.R_CAMIONHDR))
             {
-                int ID = rd.nextRecordId();
-                byte[] rec = recordR.getRecord(ID);
-                for (int i=0; i<rec.length; i++)
-                {
-                    if ((rec[i]<32)||(rec[i]>128))
-                        rec[i]=32;
-                }
-                sRemito += new String(rec);
-                sRemito += "\r\n";
-                recordW.addRecord(rec, 0, rec.length);
-                recordBK.addRecord(rec, 0, rec.length);
+                recordW.addRecord(Defines.prtLine);
+                s="Finca: "+new String(Library.getField(rec, Defines.R_FINCA, true))+"                         ";
+                s = s.substring(0,17);
+                s +=" Cuartel: "+new String(Library.getField(rec, Defines.R_CUARTEL, true));
+                recordW.addRecord(s);
+                s="Area: "+new String(Library.getField(rec, Defines.R_AREA, true))+"                            ";
+                s = s.substring(0,17);
+                s+="Variedad: "+new String(Library.getField(rec, Defines.R_VARIEDAD, true));
+                recordW.addRecord(s);
             }
-        }catch (Exception e){}
-        try {
-            recordR.closeRecordStore();
-            recordW.closeRecordStore();
-            recordBK.closeRecordStore();
-        }catch (Exception e){};
+            if (tipoLog.equals(Defines.R_CAMIONREG))
+            {
+                try {
+                    int hora = Integer.parseInt(new String(Library.getField(rec, Defines.FECHA, true)));
+                    Fecha = Library.Fecha(hora*1000L);
+                    int cnt = Integer.parseInt(new String(Library.getField(rec, Defines.CAMIONCNT, true)));
+                    s = Library.padNum(cnt, 3);
+                    s += " "+new String(Library.getField(rec, Defines.BINCODE, true));
+                    int tachos = Integer.parseInt(new String(Library.getField(rec, Defines.CONTENIDO, true)));
+                    tachosTot+=tachos;
+                    s += "    "+Library.padNum(tachos, 2);
+                    s += "    "+Library.padNum(Fecha.get(Calendar.HOUR_OF_DAY),2)+":"+
+                            Library.padNum(Fecha.get(Calendar.MINUTE),2)+":"+
+                            Library.padNum(Fecha.get(Calendar.SECOND),2);
+                }catch (Exception e){s = "ERROR BIN";}
+
+                recordW.addRecord(s);
+                tipo = Integer.parseInt(new String(Library.getField(rec, Defines.MODO_COSECHA, true)));
+                bines++;
+            }
+        }
+        recordW.addRecord(Defines.prtLine);
+        s = "Total "+bines;
+        if (tipo == Defines.MODO_TACHO)
+        {
+            if (bines == 1)
+                s += " bin ("+tachosTot+") tachos";
+            else
+                s += " bines ("+tachosTot+") tachos";
+        }
+        else
+        {
+            if (bines == 1)
+                s += " pallet ("+tachosTot+") cajas";
+            else
+                s += " pallets ("+tachosTot+") cajas";
+        }
+        recordW.addRecord(s);
+        Fecha = Library.Fecha(Misc.GetClock()*1000L);
+        s=" Fecha: "+Fecha.get(Calendar.DAY_OF_MONTH)+"/"+
+                Defines.meses[Fecha.get(Calendar.MONTH)]+"/"+Fecha.get(Calendar.YEAR)+"  "+
+                Library.padNum(Fecha.get(Calendar.HOUR_OF_DAY),2)+":"+
+                Library.padNum(Fecha.get(Calendar.MINUTE),2)+":"+
+                Library.padNum(Fecha.get(Calendar.SECOND),2);
+        recordW.addRecord(s);
+        recordW.addRecord(Defines.prtLine);
+        recordW.closeRecordStore();
+        recordR.closeRecordStore();
+        recordBK.closeRecordStore();
+
+        RecordStore.deleteRecordStore("CamionReg");
+        RecordStore record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
+        byte[] buff = new byte[512];
+        int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
+        inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
+        inx = Library.setField(buff, Variables.Cuartel, inx, Defines.R_CUARTEL);
+        inx = Library.setField(buff, Variables.Area, inx, Defines.R_AREA);
+        inx = Library.setField(buff, Variables.VariedadUva, inx, Defines.R_VARIEDAD);
+        record.addRecord(buff, 0, inx);
+        record.closeRecordStore();
+        RecordStore.deleteRecordStore("printBuffer");
+        RecordStore.deleteRecordStore("RemitoBK"+Variables.RemitoInx);
+
+        recordW = RecordStore.openRecordStore("printBuffer", true, Defines.OPEN_WRITE);
+        recordBK = RecordStore.openRecordStore("RemitoBK"+Variables.RemitoInx, true, Defines.OPEN_WRITE);
+        byte[] attrib = new byte[512];
+        for (int i=0; i<512; i++)
+            attrib[i] = 0;
+        recordW.addRecord(attrib, 0, 512);
+        recordR = RecordStore.openRecordStore("Remito", true, Defines.OPEN_READ);
+        rd = recordR.enumerateRecords(null, null, false);
+        sRemito = "";
+        while( rd.hasNextElement() ) {
+            int ID = rd.nextRecordId();
+            byte[] rec = recordR.getRecord(ID);
+            for (int i = 0; i < rec.length; i++) {
+                if ((rec[i] < 32) || (rec[i] > 128))
+                    rec[i] = 32;
+            }
+            sRemito += new String(rec);
+            sRemito += "\r\n";
+            recordW.addRecord(rec, 0, rec.length);
+            recordBK.addRecord(rec, 0, rec.length);
+        }
+        recordR.closeRecordStore();
+        recordW.closeRecordStore();
+        recordBK.closeRecordStore();
 
         //(new Thread(pr)).start();
      /*   if (NortonCosecha.sMailAddr.length()>0)
         {
             NortonCosecha.BasicMail(sRemito);
         }*/
+
         Variables.RemitoInx++;
         if (Variables.RemitoInx>=Defines.MAX_REPORTES)
             Variables.RemitoInx = 0;

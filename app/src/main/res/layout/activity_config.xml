@@ -13,7 +13,7 @@
         android:layout_alignParentTop="true"
         android:id="@+id/configMain"
         android:layout_alignParentStart="true"
-        app:srcCompat="@drawable/image" />
+         />
 
     <TextClock
         android:layout_width="wrap_content"
@@ -43,7 +43,7 @@
         android:layout_alignParentStart="true"
         android:layout_marginStart="10dp"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="370dp"
+        android:layout_marginTop="380dp"
         android:inputType="textUri"
         android:textSize="20sp"
         android:id="@+id/editPrinter" />

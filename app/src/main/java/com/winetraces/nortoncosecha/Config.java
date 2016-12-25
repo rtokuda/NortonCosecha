@@ -41,7 +41,7 @@ public class Config extends AppCompatActivity {
         );
         getImage("config.png");
         editServer.setText(Variables.sWebServiceURL);
-        editPrinter.setText(Variables.sWiFiURL);
+        editPrinter.setText(Variables.sPrinterURL);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class Config extends AppCompatActivity {
     public void grabarClick(View target)
     {
         Library.keybeep();
-        Variables.sWiFiURL = editPrinter.getText().toString();
+        Variables.sPrinterURL = editPrinter.getText().toString();
         Variables.sWebServiceURL = editServer.getText().toString();
         Misc.SaveConfig();
         onBackPressed();

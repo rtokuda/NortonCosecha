@@ -5,12 +5,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
+
+import com.winetraces.nortoncosecha.Defines;
 
 import java.util.Arrays;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.winetraces.recordstore.RecordStore.SQLdb;
 
 /**
  * Created by nestor on 05/11/2016.
@@ -24,6 +24,14 @@ public class RecordStore {
     public static SQLiteDatabase SQLdb = null;
     public static int ChannelCount = 0;
     private RecordEnumeration re = null;
+    private int[] indexBuffRd;
+    private byte[][] dataBuffRd;
+    private String[] dataBuffSRd;
+
+    private int countBuffRd;
+    private int currInxRd;
+    private String[] dataBuffWr;
+    private int currInxWr;
 
     public static boolean initializeRecordStore(Context contexto, boolean forceCreate) {
         if (forceCreate) {
@@ -35,7 +43,7 @@ public class RecordStore {
         return true;
     }
 
-    public static String[] listRecordStore() {
+    public static String[] listRecordStores() {
         Cursor cursor = null;
         try {
             cursor = SQLdb.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table'", null);
@@ -65,8 +73,11 @@ public class RecordStore {
     public static RecordStore openRecordStore(String name, boolean createIfNecessary, boolean isWrite) //ToDo createIfNecessary
     {
         RecordStore rs = new RecordStore();
-        rs.open(name, createIfNecessary, isWrite);
-        return (rs);
+        return (rs.open(name, createIfNecessary, isWrite));
+    }
+    public static RecordStore openRecordStoreBuffered (String name, boolean Mode) {
+        RecordStore rs = new RecordStore();
+        return(rs.openBuffered(name, Mode));
     }
 
     //ToDo
@@ -80,41 +91,78 @@ public class RecordStore {
         if (SQLdb == null)
             return null;
         recordName = "rd_"+name;
-        Log.d("Recordstore", "Open "+recordName);
         recordFlag = flag;
-        writeFlag = isWrite; //ToDo buffer en memoria si es readonly
-
+        writeFlag = isWrite;
         try {
             SQLdb.execSQL("CREATE TABLE IF NOT EXISTS " + recordName + " (recordID INTEGER PRIMARY KEY AUTOINCREMENT, recordData TEXT);");
         } catch (Exception e) {
+            recordName = null;
             return null;
         }
+        ChannelCount++;
+        SQLdb.beginTransaction();
+        return this;
+    }
 
-
-     /*   if (isWrite) {
-            try {
-                SQLdb.execSQL("CREATE TABLE IF NOT EXISTS " + recordName + " (recordID INTEGER PRIMARY KEY AUTOINCREMENT, recordData TEXT);");
-            } catch (Exception e) {
-                return null;
-            }
+    public RecordStore openBuffered (String name, boolean Mode)
+    {
+        if (SQLdb == null)
+            return null;
+        recordName = "rd_"+name;
+        try {
+            SQLdb.execSQL("CREATE TABLE IF NOT EXISTS " + recordName + " (recordID INTEGER PRIMARY KEY AUTOINCREMENT, recordData TEXT);");
+        } catch (Exception e) {
+            recordName = null;
+            return null;
         }
-        else {
-            try {
-                Cursor cursor = SQLdb.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table' AND name=" + recordName, null);
-                if (cursor != null) {
-                    if (cursor.getCount() > 0) {
-                        cursor.close();
-                        ChannelCount++;
-                        SQLdb.beginTransaction();
-                        return this;
+        countBuffRd = 0;
+        currInxWr = -1;
+        currInxRd = 0;
+
+        Cursor cursor = null;
+        String recordS;
+        try {
+            cursor = SQLdb.rawQuery("SELECT recordID, recordData FROM " + recordName, null);
+            if (cursor != null) {
+                int count = ((int)(DatabaseUtils.queryNumEntries(SQLdb, recordName)));
+                indexBuffRd = new int[count];
+                if (Mode == Defines.OPEN_BINARY)
+                    dataBuffRd = new byte[count][];
+                else
+                    dataBuffSRd = new String[count];
+                cursor.moveToFirst();
+                if (cursor.isAfterLast())
+                    return this;
+                for (int j = 0; j < count; j++) {
+                    recordS = cursor.getString(cursor.getColumnIndex("recordData"));
+                    int len = recordS.length();
+                    if (len < 2)
+                        continue;
+                    if (Mode == Defines.OPEN_BINARY) {
+                        byte[] val = new byte[2];
+                        byte src[] = recordS.getBytes();
+                        record = new byte[len / 2];
+                        for (int i = 0; i < len; i += 2) {
+                            val[0] = src[i];
+                            val[1] = src[i + 1];
+
+                            String hex = new String(val);
+                            record[i / 2] = (byte) (Integer.valueOf(hex, 16).intValue());
+                        }
+                        dataBuffRd[countBuffRd] = record;
                     }
-                    cursor.close();
-                    return null;
+                    else
+                        dataBuffSRd[countBuffRd] = recordS;
+                    indexBuffRd[countBuffRd++] = new Integer(cursor.getString(cursor.getColumnIndex("recordID")));
+                    cursor.moveToNext();
+                    if (cursor.isAfterLast())
+                        break;
                 }
-            } catch (Exception e) {
-                return null;
             }
-        }*/
+        }catch (Exception e){
+            recordName = null;
+            return null;
+        }
         ChannelCount++;
         SQLdb.beginTransaction();
         return this;
@@ -124,10 +172,12 @@ public class RecordStore {
     {
         if (SQLdb == null)
             return;
-       // SQLdb.execSQL("COMMIT;");
-        SQLdb.setTransactionSuccessful();
-        SQLdb.endTransaction();
-        Log.d("Recordstore", "Close "+recordName);
+        if (currInxWr > 0)
+            saveRecords();
+        if (SQLdb.inTransaction()) {
+            SQLdb.setTransactionSuccessful();
+            SQLdb.endTransaction();
+        }
         ChannelCount--;
         recordName = null;
     }
@@ -143,7 +193,7 @@ public class RecordStore {
 
     public void deleteRecord(int inx)
     {
-        if (SQLdb == null)
+        if ((SQLdb == null) || (recordName == null))
             return;
         try {
             SQLdb.execSQL("DELETE FROM "+ recordName + " WHERE recordID = "+inx);
@@ -152,9 +202,60 @@ public class RecordStore {
 
     public int getNumRecords()
     {
-        if (recordName == null)
+        if ((SQLdb == null) || (recordName == null))
             return 0;
         return ((int)(DatabaseUtils.queryNumEntries(SQLdb, recordName)));
+    }
+
+    public void reset()
+    {
+        currInxRd = 0;
+    }
+
+    public int setIndex(int inx)
+    {
+        if (inx == -1)
+        {
+            currInxRd++;
+            if (currInxRd > countBuffRd) {
+                currInxRd--;
+                return -1;
+            }
+            return currInxRd;
+        }
+        if ((inx < 0) || (inx >= countBuffRd))
+            return -1;
+        else
+            currInxRd = inx;
+        return inx;
+    }
+
+    public byte[] getBuffRecord()
+    {
+        if ((countBuffRd == 0)|| (currInxRd == -1))
+            return null;
+        return (dataBuffRd[currInxRd]);
+    }
+
+    public byte[] getBuffRecord(int inx)
+    {
+        if (inx >= countBuffRd)
+            return null;
+        return (dataBuffRd[inx]);
+    }
+
+    public String getBuffSRecord(int inx)
+    {
+        if (inx >= countBuffRd)
+            return null;
+        return (dataBuffSRd[inx]);
+    }
+
+    public int getBuffIndex()
+    {
+        if (countBuffRd == 0)
+            return -1;
+        return (indexBuffRd[currInxRd]);
     }
 
     public byte[] getRecord(int inx)
@@ -162,7 +263,7 @@ public class RecordStore {
         String recordS = null;
         Cursor cursor = null;
 
-        if ((recordName == null) || (inx <= 0))
+        if ((SQLdb == null) || (recordName == null) || (inx <= 0))
             return null;
         try {
             cursor = SQLdb.rawQuery("SELECT recordData FROM "+ recordName +" WHERE recordID = "+ inx, null);
@@ -195,7 +296,7 @@ public class RecordStore {
     {
         String recordS = null;
 
-        if ((recordName == null) || (inx <= 0))
+        if ((SQLdb == null) || (recordName == null) || (inx <= 0))
             return null;
         Cursor cursor = SQLdb.rawQuery("SELECT recordData FROM "+ recordName +" WHERE recordID = "+ inx, null);
         if (cursor != null) {
@@ -203,13 +304,14 @@ public class RecordStore {
             if (cursor.isAfterLast())
                 return null;
             recordS = cursor.getString(cursor.getColumnIndex("recordData"));
+            cursor.close();
         }
         return recordS;
     }
 
     public int addRecord(byte[] dato, int offset, int numBytes)
     {
-        if (recordName == null)
+        if ((SQLdb == null) || (recordName == null))
             return 0;
         String dt = "";
         if (offset+numBytes > dato.length)
@@ -231,9 +333,38 @@ public class RecordStore {
         return (addRecord(s.getBytes(), 0, s.length()));
     }
 
+    public void addRecordBuff(byte[] dato, int offset, int numBytes)
+    {
+        if ((SQLdb == null) || (recordName == null) || (currInxWr == -1))
+            return;
+        String dt = "";
+        if (offset+numBytes > dato.length)
+            return;
+        for (int i=0; i<numBytes; i++)
+            dt = dt+ padHex(dato[offset+i]);
+        dataBuffWr[currInxWr] = dt;
+        currInxWr++;
+        if (currInxWr >= Defines.MAX_BUFF_WRITE)
+            saveRecords();
+    }
+
+    private void saveRecords()
+    {
+        SQLdb.beginTransaction();
+        for (int i=0; i<currInxWr; i++)
+        {
+            ContentValues values = new ContentValues();
+            values.put("recordData", dataBuffWr[i]);
+            SQLdb.insert(recordName, null, values);
+        }
+        SQLdb.setTransactionSuccessful();
+        SQLdb.endTransaction();
+
+    }
+
     public void setRecord(int index, byte[] dato, int offset, int numBytes)
     {
-        if (recordName == null)
+        if ((SQLdb == null) || (recordName == null))
             return;
         String dt = "";
         if (offset+numBytes > dato.length)
@@ -248,7 +379,7 @@ public class RecordStore {
     public RecordEnumeration enumerateRecords(RecordFilter filter, RecordComparator comparator, boolean KeepUpdated)
     {
         //ToDo params
-        if (recordName == null)
+        if ((SQLdb == null) || (recordName == null))
             return null;
         re = new RecordEnumeration (recordName);
         return re;

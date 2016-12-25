@@ -1,40 +1,67 @@
 package com.winetraces.nortoncosecha;
 
+
+import android.content.Context;
+import android.os.AsyncTask;
+
 import com.winetraces.recordstore.RecordEnumeration;
 import com.winetraces.recordstore.RecordStore;
+import com.winetraces.wifimanager.WifiApManager;
 
-import java.io.IOException;
+import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
+import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 /**
  * Created by nestor on 18/11/2016.
  */
 
-class Print implements Runnable
+
+
+class Print
 {
-    HttpURLConnection connection = null;
-    OutputStreamWriter outs;
-
-    URLConnection urlConnection;
-    //String url = "socket://192.168.0.96:80;interface=wifi";
-    //String url = "http://192.168.0." + (NortonCosecha.DeviceID & 255)+":80;interface=wifi";
-
-    String url; // = NortonCosecha.sWiFiURL+":80;interface=wifi";
+    PrintWriter outs;
+    private Socket socket;
 
     String[] buff = new String[512];
     byte[] attrib;
     int len;
-    public boolean running = false;
-    boolean error = false;
+    int error = 0;
+    Context cxt;
+    WifiApManager wfAP;
 
-    public Print ()
-    {
+
+    public int imprimir() {
+        int i;
+
+        error = 0;
+        if (Defines.CommTest) {
+            Variables.sPrinterURL = "192.168.43.23";
+        }
+        wfAP = new WifiApManager(Variables.pContext);
+        if (!wfAP.isWifiApEnabled())
+        {
+            if (!wfAP.setWifiApEnabled(null, true))
+                error = 1;
+            else {
+                for (i = 0; i < 10; i++) {
+                    if (wfAP.isWifiApEnabled())
+                        break;
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                    }
+                }
+                if (i >= 10)
+                    error = 2;
+            }
+            if (error > 0){
+                return error;
+            }
+        }
         boolean first = true;
-        error = false;
-        //url = "http://"+Variables.sWiFiURL;
         try {
             RecordStore record = RecordStore.openRecordStore("printBuffer", true, Defines.OPEN_READ);
             RecordEnumeration rd = record.enumerateRecords(null, null, false);
@@ -53,28 +80,19 @@ class Print implements Runnable
             }
             record.closeRecordStore();
         }
-        catch (Exception e){error = true;}
-        running = false;
-    }
-
-    public void run() {
-        if (error)
-            return;
-        running = true;
+        catch (Exception e){}
         if (SocketOpen())
         {
             boolean doble = false;
-            for (int i=0; i<len; i++)
+            for (i=0; i<len; i++)
             {
-                if (running = false)
-                    break;
                 if ((attrib[i]==1) && (doble == false))
                 {
                     try {
                         outs.write(14);
                         outs.write(28);
                     }
-                    catch(IOException error){}
+                    catch(Exception error){}
                     doble = true;
                 }
                 if ((attrib[i]==0) && (doble == true))
@@ -83,7 +101,7 @@ class Print implements Runnable
                         outs.write(15);
                         outs.write(29);
                     }
-                    catch(IOException error){}
+                    catch(Exception error){}
                     doble = false;
                 }
                 print(buff[i]);
@@ -95,50 +113,24 @@ class Print implements Runnable
             print(" ");
             print(" ");
         }
+        else {
+            error = 3;
+        }
         SocketClose();
-        Variables.wProgress.cancel();
-        running = false;
+        return error;
     }
+
 
     private boolean SocketOpen()
     {
-        if (outs != null)
-        {
-            try {
-                outs.close();
-            }catch (IOException error){}
-            outs = null;
-        }
-
+        socket = null;
+        outs = null;
         try {
-            URL url = new URL("http://"+Variables.sWiFiURL+"/");
-            //connection = (StreamConnection)Connector.open(url);
-/*            urlConnection = url.openConnection();
-
-            urlConnection.setDoOutput(true);
-*/
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setDoOutput(true);
-            connection.setChunkedStreamingMode(0);
-
-
-        }
-        catch(IOException error)
-        {
-            //System.out.println("Open Socket: " + error.toString());
-            return false;
-        }
-        try {
-            outs = 	new OutputStreamWriter(connection.getOutputStream());
-            //outs = 	new OutputStreamWriter(urlConnection.getOutputStream());
-        }
-        catch(IOException error)
-        {
-            //System.out.println("Stream: " + error.toString());
-            return false;
-        }
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(Variables.sPrinterURL, 80), 5000);
+            outs = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+        } catch (Exception e){ return false;}
         return true;
-
     }
 
     private void SocketClose()
@@ -151,18 +143,20 @@ class Print implements Runnable
             }
             outs = null;
         }
-        catch(IOException error)
+        catch(Exception error)
         {
             //System.out.println("Out: " + error.toString());
         }
         try {
-            if (connection != null)
-                connection.disconnect();
-            connection = null;
+            if (socket != null)
+            {
+                socket.close();
+            }
+            socket = null;
         }
         catch(Exception error)
         {
-            //System.out.println("Close Socket: " + error.toString());
+            //System.out.println("Out: " + error.toString());
         }
     }
 
@@ -173,10 +167,10 @@ class Print implements Runnable
             outs.write(line, 0, line.length());
             try
             {
-                Thread.sleep(100);
+                Thread.sleep(50);
             }catch (Exception e){}
         }
-        catch(IOException error)
+        catch(Exception error)
         {
             //System.out.println("Out: " + error.toString());
         }

@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -18,21 +19,21 @@ import java.util.Calendar;
 
 public class Programa extends AppCompatActivity {
     private ImageView mBackground;
-    public String txt[][] = new String[50][10];
+    public String txt[][] = new String[50][20];
     public String prg[] = new String[50];
     private byte ProgInx, MaxProg, ProgAct;
     int cnt=0;
     byte i;
-    RecordStore record = null;
     int horaAct;
     int fechaHoy;
-    private TextView programaAct, fincaView, cuartelView, areaView, programaView;
+    private TextView programaAct, fincaView, cuartelView, areaView, unidadView;
     private TextView cuadrillaView, cantidadView, variedadView;
     private String sBackground = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         byte[] datos;
+        RecordStore record;
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_programa);
@@ -42,7 +43,7 @@ public class Programa extends AppCompatActivity {
         fincaView = (TextView) findViewById(R.id.fincaView);
         cuartelView = (TextView) findViewById(R.id.cuartelView);
         areaView = (TextView) findViewById(R.id.areaView);
-        programaView = (TextView) findViewById(R.id.programaView);
+        unidadView = (TextView) findViewById(R.id.unidadView);
         cuadrillaView = (TextView) findViewById(R.id.cuadrillaView);
         cantidadView = (TextView) findViewById(R.id.cantidadView);
         variedadView = (TextView) findViewById(R.id.variedadView);
@@ -58,22 +59,21 @@ public class Programa extends AppCompatActivity {
         Variables.currView = mBackground;
 
         horaAct = Misc.GetClock();
-        try {
-            record = RecordStore.openRecordStore("Programas", true, Defines.OPEN_READ);
-            cnt = record.getNumRecords();
-            MaxProg = 0;
-            for (i=0; i<cnt; i++)
-            {
-                String tx[] = new String [10];
-                datos = record.getRecord(i+1);
-                Misc.splitPrograma(datos, tx);
-                prg[i]= tx[0];
-                for (byte j=0; j<9; j++)
-                    txt[i][j]=tx[j+1];
-                MaxProg++;
-            }
-            record.closeRecordStore();
-        }catch(Exception e){}
+
+        record = RecordStore.openRecordStore("Programas", true, Defines.OPEN_READ);
+        cnt = record.getNumRecords();
+        MaxProg = 0;
+        for (i=0; i<cnt; i++)
+        {
+            String tx[] = new String [20];
+            datos = record.getRecord(i+1);
+            Misc.splitProgramas(datos, tx);
+            prg[i]= tx[0];
+            for (byte j=0; j<19; j++)
+                txt[i][j]=tx[j];
+            MaxProg++;
+        }
+        record.closeRecordStore();
         ProgInx = Variables.ProgInx;
         ProgAct = ProgInx;
         pantalla();
@@ -98,6 +98,7 @@ public class Programa extends AppCompatActivity {
 
     private void ProgSel()
     {
+        RecordStore record;
         byte datos[]=new byte[10];
 
         if ((ProgAct != ProgInx) || !Variables.ProgSel)
@@ -105,62 +106,63 @@ public class Programa extends AppCompatActivity {
             Variables.ProgInx = ProgInx;
 
             Variables.ProgID = prg[ProgInx];
-            Variables.Programa= txt[ProgInx][0];
-            Variables.Finca = txt[ProgInx][1];
-            Variables.Cuartel = txt[ProgInx][2];
-            Variables.Area = txt[ProgInx][3];
-            Variables.CuadrillaPrg = txt[ProgInx][4];
-            Variables.ModoCosecha = Integer.parseInt(txt[ProgInx][7]);
-            Variables.VariedadUva = txt[ProgInx][8];
+            Variables.Programa= txt[ProgInx][Defines.PRG_NAME_COMPLETE];
+            Variables.Finca = txt[ProgInx][Defines.PRG_FINCA];
+            Variables.Cuartel = txt[ProgInx][Defines.PRG_CUARTEL];
+            Variables.Area = txt[ProgInx][Defines.PRG_AREA];
+            Variables.CuadrillaPrg = txt[ProgInx][Defines.PRG_CUADRILLA];
+            Variables.ModoCosecha = Integer.parseInt(txt[ProgInx][Defines.PRG_MODO_COSECHA]);
+            Variables.VariedadUva = txt[ProgInx][Defines.PRG_VARIEDAD];
+            Variables.Unidad = txt[ProgInx][Defines.PRG_UNIDAD];
             //NortonCosecha.TachoCajaCnt = 0;
-            try {
-                record = RecordStore.openRecordStore("ProgSel",true, Defines.OPEN_WRITE);
-                byte dd[] = prg[ProgInx].getBytes();
-                Library.byteArrayCopy(dd, datos);
-                int horaAct = Misc.GetClock();
-                Library.toIntelDataInt(horaAct, datos, 6);
-                record.addRecord(datos,0,10);
-                record.closeRecordStore();
-                Variables.FechaProg = horaAct / 86400;
-                Variables.ProgSel = true;
-                Misc.SaveConfig();
-            }catch (Exception e){}
-            try {
-                RecordStore record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
-                byte[] buff = new byte[512];
-                int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
-                inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
-                inx = Library.setField(buff, Variables.Cuartel, inx, Defines.R_CUARTEL);
-                inx = Library.setField(buff, Variables.Area, inx, Defines.R_AREA);
-                inx = Library.setField(buff, Variables.VariedadUva, inx, Defines.R_VARIEDAD);
-                record.addRecord(buff, 0, inx);
-                record.closeRecordStore();
-            }catch(Exception e){e.printStackTrace();}
+
+            record = RecordStore.openRecordStore("ProgSel",true, Defines.OPEN_WRITE);
+            byte dd[] = prg[ProgInx].getBytes();
+            Library.byteArrayCopy(dd, datos);
+            int horaAct = Misc.GetClock();
+            Library.toIntelDataInt(horaAct, datos, 6);
+            record.addRecord(datos,0,10);
+            record.closeRecordStore();
+
+            Variables.FechaProg = horaAct / 86400;
+            Variables.ProgSel = true;
+            Misc.SaveConfig();
+
+            record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
+            byte[] buff = new byte[512];
+            int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
+            inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
+            inx = Library.setField(buff, Variables.Cuartel, inx, Defines.R_CUARTEL);
+            inx = Library.setField(buff, Variables.Area, inx, Defines.R_AREA);
+            inx = Library.setField(buff, Variables.VariedadUva, inx, Defines.R_VARIEDAD);
+            record.addRecord(buff, 0, inx);
+            record.closeRecordStore();
+
             Calendar Fecha = Library.Fecha(horaAct*1000L);
-            try {
-                String fname = "NLOG"+Integer.toString(Fecha.get(Calendar.YEAR))+
-                        Library.padNum(Fecha.get(Calendar.MONTH)+1, 2)+
-                        Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH), 2);
-                RecordStore record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
-                datos = new byte [15];
-                datos[0] = 3;
 
-                byte[] aux = Variables.ProgID.getBytes();
-                Library.byteArrayCopy(aux, 0, datos, 1);
+            String fname = "NLOG"+Integer.toString(Fecha.get(Calendar.YEAR))+
+                    Library.padNum(Fecha.get(Calendar.MONTH)+1, 2)+
+                    Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH), 2);
+            record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
 
-                aux = new byte[4];
-                Library.toIntelDataInt(Variables.DeviceID, aux, 0);
-                aux = Library.arrayInvert(aux);
-                Library.byteArrayCopy(aux, 0, datos, 7);
+            datos = new byte [15];
+            datos[0] = 3;
 
-                aux = new byte[4];
-                Library.toIntelDataInt(horaAct, aux, 0);
-                aux = Library.arrayInvert(aux);
-                Library.byteArrayCopy(aux, 0, datos, 11);
+            byte[] aux = Variables.ProgID.getBytes();
+            Library.byteArrayCopy(aux, 0, datos, 1);
 
-                record.addRecord(datos, 0, 15);
-                record.closeRecordStore();
-            }catch(Exception e){e.printStackTrace();}
+            aux = new byte[4];
+            Library.toIntelDataInt(Variables.DeviceID, aux, 0);
+            aux = Library.arrayInvert(aux);
+            Library.byteArrayCopy(aux, 0, datos, 7);
+
+            aux = new byte[4];
+            Library.toIntelDataInt(horaAct, aux, 0);
+            aux = Library.arrayInvert(aux);
+            Library.byteArrayCopy(aux, 0, datos, 11);
+
+            record.addRecord(datos, 0, 15);
+            record.closeRecordStore();
             Misc.SaveConfig();
         }
     }
@@ -187,14 +189,14 @@ public class Programa extends AppCompatActivity {
 
     public void pantalla()
     {
-        programaAct.setText(txt[ProgInx][0]);
-        fincaView.setText(txt[ProgInx][1]);
-        cuartelView.setText(txt[ProgInx][2]);
-        areaView.setText(txt[ProgInx][3]);
-        programaView.setText(txt[ProgInx][4]);
-        cuadrillaView.setText(Variables.Cuadrilla);
-        cantidadView.setText(txt[ProgInx][5]);
-        variedadView.setText(txt[ProgInx][8]);
+        programaAct.setText(txt[ProgInx][Defines.PRG_NAME_COMPLETE]);
+        fincaView.setText(txt[ProgInx][Defines.PRG_FINCA]);
+        cuartelView.setText(txt[ProgInx][Defines.PRG_CUARTEL]);
+        areaView.setText(txt[ProgInx][Defines.PRG_AREA]);
+        unidadView.setText(txt[ProgInx][Defines.PRG_UNIDAD]);
+        cuadrillaView.setText(txt[ProgInx][Defines.PRG_CUADRILLA]);
+        cantidadView.setText(txt[ProgInx][Defines.PRG_CANTIDAD]);
+        variedadView.setText(txt[ProgInx][Defines.PRG_VARIEDAD]);
     }
 
     public void buttonLeftClick(View target)
@@ -225,6 +227,7 @@ public class Programa extends AppCompatActivity {
 
     public void seleccionarClick(View target)
     {
+        RecordStore record;
         byte datos[]=new byte[10];
 
         Library.keybeep();
@@ -233,74 +236,69 @@ public class Programa extends AppCompatActivity {
             Library.alert (this, "Atención", "Debe cerrar el bin para cambiar el programa", android.R.drawable.ic_dialog_alert);
             return;
         }
-        try {
-            if ((ProgAct != ProgInx) || !Variables.ProgSel)
-            {
-                Variables.ProgInx = ProgInx;
+        if ((ProgAct != ProgInx) || !Variables.ProgSel)
+        {
+            Variables.ProgInx = ProgInx;
+            Variables.TachoCajaCnt = 0;
+            Variables.ProgID = prg[ProgInx];
+            Variables.Programa= txt[ProgInx][Defines.PRG_NAME_COMPLETE];
+            Variables.Finca = txt[ProgInx][Defines.PRG_FINCA];
+            Variables.Cuartel = txt[ProgInx][Defines.PRG_CUARTEL];
+            Variables.Area = txt[ProgInx][Defines.PRG_AREA];
+            Variables.CuadrillaPrg = txt[ProgInx][Defines.PRG_CUADRILLA];
+            Variables.ModoCosecha = Integer.parseInt(txt[ProgInx][Defines.PRG_MODO_COSECHA]);
+            Variables.VariedadUva = txt[ProgInx][Defines.PRG_VARIEDAD];
+            Variables.Unidad = txt[ProgInx][Defines.PRG_UNIDAD];
 
-                Variables.ProgID = prg[ProgInx];
-                Variables.Programa= txt[ProgInx][0];
-                Variables.Finca = txt[ProgInx][1];
-                Variables.Cuartel = txt[ProgInx][2];
-                Variables.Area = txt[ProgInx][3];
-                Variables.CuadrillaPrg = txt[ProgInx][4];
-                Variables.ModoCosecha = Integer.parseInt(txt[ProgInx][7]);
-                Variables.VariedadUva = txt[ProgInx][8];
-                Variables.TachoCajaCnt = 0;
-                try {
-                    record = RecordStore.openRecordStore("ProgSel",true, Defines.OPEN_WRITE);
-                    byte dd[] = prg[ProgInx].getBytes();
-                    Library.byteArrayCopy(dd, datos);
-                    int horaAct = Misc.GetClock();
-                    Library.toIntelDataInt(horaAct, datos, 6);
-                    record.addRecord(datos,0,10);
-                    record.closeRecordStore();
-                    Variables.FechaProg = horaAct / 86400;
-                    Variables.ProgSel = true;
-                    Misc.SaveConfig();
-                }catch (Exception e){}
-                try {
-                    RecordStore record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
-                    byte[] buff = new byte[512];
-                    int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
-                    inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
-                    inx = Library.setField(buff, Variables.Cuartel, inx, Defines.R_CUARTEL);
-                    inx = Library.setField(buff, Variables.Area, inx, Defines.R_AREA);
-                    inx = Library.setField(buff, Variables.VariedadUva, inx, Defines.R_VARIEDAD);
-                    record.addRecord(buff, 0, inx);
-                    record.closeRecordStore();
-                }catch(Exception e){e.printStackTrace();}
-                Calendar Fecha = Library.Fecha(horaAct*1000L);
-                try {
-                    String fname = "NLOG"+Integer.toString(Fecha.get(Calendar.YEAR))+
-                            Library.padNum(Fecha.get(Calendar.MONTH)+1, 2)+
-                            Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH), 2);
-                    RecordStore record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
-                    datos = new byte [15];
-                    datos[0] = 3;
+            record = RecordStore.openRecordStore("ProgSel",true, Defines.OPEN_WRITE);
+            byte dd[] = prg[ProgInx].getBytes();
+            Library.byteArrayCopy(dd, datos);
+            int horaAct = Misc.GetClock();
+            Library.toIntelDataInt(horaAct, datos, 6);
+            record.addRecord(datos,0,10);
+            record.closeRecordStore();
+            Variables.FechaProg = horaAct / 86400;
+            Variables.ProgSel = true;
+            Misc.SaveConfig();
 
-                    byte[] aux = Variables.ProgID.getBytes();
-                    Library.byteArrayCopy(aux, 0, datos, 1);
+            record = RecordStore.openRecordStore("CamionReg", true, Defines.OPEN_WRITE);
+            byte[] buff = new byte[512];
+            int inx = Library.setField(buff, Defines.R_CAMIONHDR, 0, Defines.TIPO_LOG);
+            inx = Library.setField(buff, Variables.Finca, inx, Defines.R_FINCA);
+            inx = Library.setField(buff, Variables.Cuartel, inx, Defines.R_CUARTEL);
+            inx = Library.setField(buff, Variables.Area, inx, Defines.R_AREA);
+            inx = Library.setField(buff, Variables.VariedadUva, inx, Defines.R_VARIEDAD);
+            record.addRecord(buff, 0, inx);
+            record.closeRecordStore();
 
-                    aux = new byte[4];
-                    Library.toIntelDataInt(Variables.DeviceID, aux, 0);
-                    aux = Library.arrayInvert(aux);
-                    Library.byteArrayCopy(aux, 0, datos, 7);
+            Calendar Fecha = Library.Fecha(horaAct*1000L);
+            String fname = "NLOG"+Integer.toString(Fecha.get(Calendar.YEAR))+
+                    Library.padNum(Fecha.get(Calendar.MONTH)+1, 2)+
+                    Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH), 2);
 
+            record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
+            datos = new byte [15];
+            datos[0] = 3;
 
-                    aux = new byte[4];
-                    Library.toIntelDataInt(horaAct, aux, 0);
-                    aux = Library.arrayInvert(aux);
-                    Library.byteArrayCopy(aux, 0, datos, 11);
+            byte[] aux = Variables.ProgID.getBytes();
+            Library.byteArrayCopy(aux, 0, datos, 1);
 
-                    record.addRecord(datos, 0, 15);
-                    record.closeRecordStore();
-                }catch(Exception e){e.printStackTrace();}
-                Misc.SaveConfig();
-                Variables.bFlagCosecha = true;
-            }
-            onBackPressed();
-        } catch (Exception e) { }
+            aux = new byte[4];
+            Library.toIntelDataInt(Variables.DeviceID, aux, 0);
+            aux = Library.arrayInvert(aux);
+            Library.byteArrayCopy(aux, 0, datos, 7);
+
+            aux = new byte[4];
+            Library.toIntelDataInt(horaAct, aux, 0);
+            aux = Library.arrayInvert(aux);
+            Library.byteArrayCopy(aux, 0, datos, 11);
+
+            record.addRecord(datos, 0, 15);
+            record.closeRecordStore();
+            Misc.SaveConfig();
+            Variables.bFlagCosecha = true;
+        }
+        onBackPressed();
     }
 
     @Override

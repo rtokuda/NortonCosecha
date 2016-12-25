@@ -43,6 +43,7 @@ public class InitCard extends AppCompatActivity {
     private WebView waitTagView;
     private Context context;
     byte[] bNombre, bLegajo, bPatente, bCamion;
+    WebService ws;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +64,7 @@ public class InitCard extends AppCompatActivity {
         text3 = (TextView)findViewById(R.id.text3);
         Variables.currView = mainFrame;
         context = this;
+        ws = new WebService();
 
         bNombre = new byte[16];
         bPatente = new byte[16];
@@ -196,22 +198,27 @@ public class InitCard extends AppCompatActivity {
         if (grabarReady && MifareIO.connect(this, intent)) {
             if (writeCard(intent))
             {
+                MifareIO.disconnect();
+                Library.goodBeep();
                 waitTagView.setVisibility(View.INVISIBLE);
                 mainFrame.setAlpha(1F);
                 Library.alert(context, "Información", "La tarjeta se grabó EXITOSAMENTE", android.R.drawable.ic_dialog_info);
             }
+            else
+                MifareIO.disconnect();
         }
     }
 
     private void recuperaTarjeta(final String data)
     {
+
         if (Variables.CardType == Defines.T_CAMION) {
             progress.setMessage("...Recuperando tarjeta");
             progress.show();
             Thread th = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    byte[] buff = Variables.ws.GetCardCamion(data, 16);
+                    byte[] buff = ws.GetCardCamion(data, 16);
                     if (buff == null) {
                         runOnUiThread(new Runnable() {
                             @Override
@@ -227,16 +234,33 @@ public class InitCard extends AppCompatActivity {
                         });
                         return;
                     }
+                    final byte[] bLast = new byte[16];
+                    final byte[] bFirst = new byte[16];
+                    boolean flg = false;
+                    for (int i = 0; i < 16; i++)
+                    {
+                        bNombre[i] = bFirst[i]= bLast[i] = 32;
+                    }
+                    int j = 0;
                     for (int i = 0; i < 16; i++) {
-                        bNombre[i] = buff[i];
+                        if (!flg)
+                            bLast[i] = buff[i];
+                        else {
+                            bFirst[j] = buff[i];
+                            j++;
+                        }
+                        if (buff[i] == 32)
+                            flg = true;
+                    }
+                    for (int i = 0; i < 16; i++) {
                         bPatente[i] = buff[i + 16];
                         bCamion[i] = buff[i + 32];
                     }
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            text1.setText(new String(bNombre));
-                            text2.setText(new String(bPatente));
+                            text1.setText(new String(bFirst));
+                            text2.setText(new String(bLast));
                             text3.setText(new String(bCamion));
                             progress.cancel();
                             grabar.setEnabled(true);
@@ -253,7 +277,7 @@ public class InitCard extends AppCompatActivity {
             Thread th = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    byte[] buff = Variables.ws.GetCardCosechador(data, 16);
+                    byte[] buff = ws.GetCardCosechador(data, 16);
                     if (buff == null) {
                         runOnUiThread(new Runnable() {
                             @Override
@@ -269,22 +293,32 @@ public class InitCard extends AppCompatActivity {
                         });
                         return;
                     }
+                    final byte[] bLast = new byte[16];
+                    final byte[] bFirst = new byte[16];
+                    boolean flg = false;
+                    for (int i = 0; i < 16; i++)
+                    {
+                        bNombre[i] = bFirst[i]= bLast[i] = 32;
+                    }
+                    int j = 0;
                     for (int i = 0; i < 16; i++) {
+                        if (!flg)
+                            bLast[i] = buff[i];
+                        else
+                        {
+                            bFirst[j] = buff[i];
+                            j++;
+                        }
+                        if (buff[i] == 32)
+                            flg = true;
                         bNombre[i] = buff[i];
                         bLegajo[i] = buff[i + 16];
-                    }
-                    int inx = -1;
-                    byte[] bApellido = new byte[16];
-                    for (int i=0; i<16; i++)
-                    {
-                        if (bNombre[i] == 32)
-                            inx = i;
                     }
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            text1.setText(new String(bNombre));
-                            text2.setText(data);
+                            text1.setText(Library.String(bFirst));
+                            text2.setText(Library.String(bLast));
                             progress.cancel();
                             grabar.setEnabled(true);
                             grabar.setAlpha(1f);
@@ -339,7 +373,7 @@ public class InitCard extends AppCompatActivity {
         byte[] num = null;
 
         String hh = Library.padHex(data[11])+Library.padHex(data[10])+Library.padHex(data[9])+Library.padHex(data[8]);
-        String send;
+        String send="";
 
         switch(Variables.CardType) {
             case Defines.T_COSECHADOR:
@@ -494,13 +528,13 @@ public class InitCard extends AppCompatActivity {
         {
             switch (Variables.CardType) {
                 case Defines.T_COSECHADOR:
-                    //SendData("TXCCH", send);
+                    SendData("TXCCH", send);
                     break;
                 case Defines.T_BIN:
-                    //SendData("TXBIN", send);
+                    SendData("TXBIN", send);
                     break;
                 case Defines.T_CAMION:
-                    //SendData("TXCAM", send);
+                    SendData("TXCAM", send);
                     break;
                 default:
                     block = blank;

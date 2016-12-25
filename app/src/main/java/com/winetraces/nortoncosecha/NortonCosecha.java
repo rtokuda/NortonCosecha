@@ -2,11 +2,15 @@ package com.winetraces.nortoncosecha;
 
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.os.AsyncTask;
 import android.os.Build;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,21 +26,25 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.winetraces.recordstore.RecordStore;
+import com.winetraces.wifimanager.WifiApManager;
 
 import java.io.InputStream;
+import java.security.PublicKey;
 
 
 public class NortonCosecha extends AppCompatActivity {
 
     private View mMainView;
     private ImageView mBackground;
-    private TextView mNombre, mCount, mLegajo;
-    private TextView count1, count2, count3, count4, count5, count6;
-    private Button setPrograma;
-    private ProgressBar mCosechadorTimer;
+    private static TextView mNombre, mCount, mLegajo;
+    public static TextView count1, count2, count3, count4, count5, count6;
+    public static Button setPrograma;
+    public static ProgressBar mCosechadorTimer;
     private Handler handler = new Handler();
     private String sBackground = "";
-    private int prgInx;
+    public static ProgressDialog wProgress;
+    public static Context CardContext;
+    public static Intent CardIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +55,7 @@ public class NortonCosecha extends AppCompatActivity {
         mBackground = (ImageView) findViewById(R.id.background);
         getImage("wait_programa.png");
         Variables.currView = mBackground;
+        //System.setProperty("http.keepAlive","false");
 
         mNombre = (TextView) findViewById(R.id.cosechador_nombre);
         mCount = (TextView) findViewById(R.id.cosechador_count);
@@ -76,63 +85,75 @@ public class NortonCosecha extends AppCompatActivity {
         RecordStore.initializeRecordStore(this, false);
         Variables.DeviceID = Build.SERIAL.hashCode(); //5DBE1EDE, 1572740830
         String s = Build.SERIAL; //7C8912B5  2089358005
-        Misc.SetPrograma(this);
-
-        Variables.sWebServiceURL = "norton.fundacionadabyron.org";
+        Misc.GetConfig(this);
 
         Variables.ErrNum = 0;
-        prgInx = 0;
+        Variables.writeTiming = 0;
 
         mCosechadorTimer.setVisibility(View.INVISIBLE);
-        mCosechadorTimer.setMax(Variables.DiffTime);
+        mCosechadorTimer.setMax(Variables.WaitCardTime);
 
-            Thread th = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                     while (true)
-                     {
-                         if(mCosechadorTimer.getVisibility()==View.VISIBLE)
-                         {
-                             int horaAct;
-                             final int diff;
-                             boolean fDisplay = false;
-                             if (Variables.CosechadorLastTime > 0) {
-                                 horaAct = Misc.GetClock();
-                                 int tmp = (horaAct % 86400) - ((int) (Variables.CosechadorLastTime % 86400L));
-                                 if (tmp > Variables.DiffTime)
-                                 {
-                                     Variables.CosechadorLastTime = -Variables.CosechadorLastTime;
-                                     tmp = Variables.DiffTime;
-                                 }
-                                 diff = tmp;
+        wProgress = new ProgressDialog(this);
+        wProgress.setCancelable(false);
+        wProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        wProgress.setIndeterminate(true);
+        wProgress.setMessage("Procesando tarjeta...");
+        wProgress.hide();
 
-                                 runOnUiThread(new Runnable() {
-                                     @Override
-                                     public void run() {
-                                         handler.post(new Runnable() {
-                                             @Override
-                                             public void run() {
-                                                 mCosechadorTimer.setProgress(diff);
-                                                 if (RecordStore.ChannelCount!=0) {
-                                                     Toast.makeText(NortonCosecha.this, "Error Canal Recordstore", Toast.LENGTH_SHORT).show();
-                                                 }
-                                             }
-                                         });
-                                     }
-                                 });
-
+        Variables.csCount = 0;
+        Variables.pContext  = this;
+        Thread th = new Thread(new Runnable() {
+        @Override
+        public void run() {
+                 while (true)
+                 {
+                     if(mCosechadorTimer.getVisibility()==View.VISIBLE) {
+                         int horaAct;
+                         Variables.ProgressCosechador = 0;
+                         if (Variables.CosechadorLastTime > 0) {
+                             horaAct = Misc.GetClock();
+                             int tmp = (horaAct % 86400) - ((int) (Variables.CosechadorLastTime % 86400L));
+                             if (tmp > Variables.WaitCardTime) {
+                                 Variables.CosechadorLastTime = -Variables.CosechadorLastTime;
+                                 tmp = Variables.WaitCardTime;
                              }
-
-                         }
-                         try {
-                             Thread.sleep(3000);
-                         } catch (Exception e) {
+                             Variables.ProgressCosechador = tmp;
+                             runOnUiThread(new Runnable() {
+                                 @Override
+                                 public void run() {
+                                     handler.post(new Runnable() {
+                                         @Override
+                                         public void run() {
+                                            mCosechadorTimer.setProgress(Variables.ProgressCosechador);
+                                         }
+                                     });
+                                 }
+                             });
                          }
                      }
-                }
-            });
-            th.start();
-        Variables.ws = new WebService();
+/*                     if (RecordStore.ChannelCount!=0) {
+                         Variables.toastMsg = "Error Canal Recordstore ";
+                         runOnUiThread(new Runnable() {
+                             @Override
+                             public void run() {
+                                 handler.post(new Runnable() {
+                                     @Override
+                                     public void run() {
+                                     Toast.makeText(NortonCosecha.this, Variables.toastMsg, Toast.LENGTH_SHORT).show();
+                                     }
+                                 });
+                             }
+                         });
+                     }*/
+                     try {
+                         Thread.sleep(3000);
+                     } catch (Exception e) {
+                     }
+                 }
+            }
+        });
+        th.start();
+
     }
 
     private void getImage(String file)
@@ -154,6 +175,7 @@ public class NortonCosecha extends AppCompatActivity {
 
     public void programaClick(View target)
     {
+        setPrograma.setEnabled(false);
         Intent intent = new Intent(this, Programa.class);
         Library.keybeep();
         startActivity(intent);
@@ -162,6 +184,7 @@ public class NortonCosecha extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        setPrograma.setEnabled(true);
         if (Variables.mainEnable) {
             if (mMainView.getVisibility() == View.INVISIBLE)
                 mMainView.setVisibility(View.VISIBLE);
@@ -191,33 +214,29 @@ public class NortonCosecha extends AppCompatActivity {
         MifareIO.disable(this);
     }
 
-
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (Variables.bFlagCosecha && MifareIO.connect(this, intent)) {
             if (Cosecha.CardProcess(this, intent)) {
-                switch (Variables.CardType)
-                {
-                    case Defines.T_BIN:
-                    case Defines.T_CHANGE:
-                    case Defines.T_CAMION:
-                        Library.alert(this,"Información", Variables.msg, android.R.drawable.ic_dialog_info);
-                        break;
-                    case Defines.T_COSECHADOR:
-                        refreshScreenCosecha();
-                        break;
-                    case Defines.T_PROGRAMA:
-                        break;
-                }
-                Library.goodBeep();
+                CardContext = this;
+                CardIntent = intent;
+                if (Variables.Cosechador_waiting)
+                    badBeep2();
+                else
+                    Library.goodBeep();
+                MifareIO.disconnect();
+                new CardTask().execute();
             }
-            else { Library.badBeep(); }
+            else {
+                Library.badBeep();
+                MifareIO.disconnect();
+            }
         }
         else {
             Library.badBeep();
+            MifareIO.disconnect();
         }
-        MifareIO.disconnect();
     }
 
     public void setBackground()
@@ -245,7 +264,7 @@ public class NortonCosecha extends AppCompatActivity {
         }
     }
 
-    public void refreshScreenCosecha()
+    public static void refreshScreenCosecha()
     {
         if (!Variables.bFlagCosecha || !Variables.ProgSel) {
             Variables.CosechadorLastTime = -1;
@@ -261,6 +280,10 @@ public class NortonCosecha extends AppCompatActivity {
             count6.setText(" ");
             return;
         }
+        if (Variables.Cosechador_waiting)
+            mNombre.setTextColor(Color.argb(255,255, 0, 0));
+        else
+            mNombre.setTextColor(Color.argb(255,0, 0, 0));
         mNombre.setText(Variables.Cosechador_name);
         mCount.setText(Variables.Cosechador_count);
         mLegajo.setText(Variables.Cosechador_legajo);
@@ -352,5 +375,92 @@ public class NortonCosecha extends AppCompatActivity {
             return;
         }
         tone.release();
+    }
+}
+
+class CardTask extends AsyncTask <Void, String, Integer> {
+    @Override
+    protected void onPreExecute()
+    {
+        NortonCosecha.refreshScreenCosecha();
+    }
+
+    @Override
+    protected Integer doInBackground(Void...arg0) {
+        boolean flag = false;
+        while (true)
+        {
+            try {
+                Thread.sleep(500);
+            } catch (Exception e) {
+            }
+            if (Variables.writeTiming == 0)
+                break;
+            if (!flag) {
+                publishProgress("MSG","Un momento...");
+                flag = true;
+            }
+        }
+        if (Variables.CardType == Defines.T_CAMION) {
+            publishProgress("MSG","Imprimiendo...");
+            Print pr = new Print();
+            int err = pr.imprimir();
+            if ((err == 1) || (err == 2))
+                publishProgress("ERR","WiFi Impresora");
+            if (err == 3)
+                publishProgress("ERR","Conexion Impresora");
+        }
+        return 0;
+    }
+
+    @Override
+    protected void onProgressUpdate(String...msg){
+        if (msg[0].equals("MSG")) {
+            if (!NortonCosecha.wProgress.isShowing())
+                NortonCosecha.wProgress.show();
+            NortonCosecha.wProgress.setMessage(msg[1]);
+        }
+        if (msg[0].equals("ERR"))
+            Library.alert(NortonCosecha.CardContext, "ERROR", msg[1], android.R.drawable.ic_dialog_alert);
+    }
+
+    @Override
+    protected void onPostExecute(Integer arg0)
+    {
+        super.onPostExecute(arg0);
+        NortonCosecha.wProgress.cancel();
+        switch (Variables.CardType)
+        {
+            case Defines.T_BIN:
+            case Defines.T_CHANGE:
+            case Defines.T_CAMION:
+                Library.alert(NortonCosecha.CardContext,"Información", Variables.msg, android.R.drawable.ic_dialog_info);
+                break;
+            case Defines.T_COSECHADOR:
+                break;
+            case Defines.T_PROGRAMA:
+                break;
+        }
+        String msg1 = "";
+        String msg2 = "";
+        if (Variables.ModoCosecha == Defines.MODO_CAJA)
+        {
+            if (Variables.TachoCajaCnt >= Variables.Cajas4Pallet)
+                msg1 = "El pallet esta completo.\n\n";
+            if (Variables.CamionCnt >= Variables.Pallet4Camion)
+                msg2 = "El camión esta completo.\n\r";
+        }
+        else
+        {
+            if (Variables.TachoCajaCnt >= Variables.Tachos4Bin)
+                msg1 = "El bin esta completo.\n\n";
+            if (Variables.CamionCnt >= Variables.Bin4Camion)
+                msg2 = "El camión esta completo.\n\n";
+        }
+        if(!msg1.equals("")||!msg2.equals("")) {
+            Library.alert(NortonCosecha.CardContext, "Atención", msg1+msg2, android.R.drawable.ic_dialog_alert);
+        }
+        NortonCosecha.refreshScreenCosecha();
+        MifareIO.disconnect();
     }
 }

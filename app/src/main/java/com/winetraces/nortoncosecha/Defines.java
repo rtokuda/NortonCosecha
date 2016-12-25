@@ -5,7 +5,11 @@ package com.winetraces.nortoncosecha;
  */
 
 public class Defines {
-    public final static int CONFIG_VERSION = 11;
+
+    public static int LogCnt = 0;
+
+    public final static int CONFIG_VERSION = 19;
+    public final static boolean DELETE_ALL = true;
 
     public final static int COSECHADOR_TIMEOUT = 30;
 
@@ -78,10 +82,27 @@ public class Defines {
     static public final int R_CUARTEL = 71;
     static public final int R_AREA = 72;
     static public final int R_VARIEDAD = 73;
-    static public final int PRG_LEN = 46;
+    static public final int PRG_LEN = 54;
+
+    static public final int PRG_NAME = 0;
+    static public final int PRG_NAME_COMPLETE = 1;
+    static public final int PRG_FINCA = 2;
+    static public final int PRG_CUARTEL = 3;
+    static public final int PRG_AREA = 4;
+    static public final int PRG_CUADRILLA = 5;
+    static public final int PRG_CANTIDAD = 6;
+    static public final int PRG_TITLE = 7;
+    static public final int PRG_MODO_COSECHA = 8;
+    static public final int PRG_VARIEDAD = 9;
+    static public final int PRG_UNIDAD = 10;
 
     static public final boolean OPEN_WRITE = true;
     static public final boolean OPEN_READ = false;
+
+    static public final boolean OPEN_BINARY = true;
+    static public final boolean OPEN_TEXT = false;
+
+    static public final int MAX_BUFF_WRITE = 1000;
 
     static public final String prtLine = "--------------------------------------";
     static public final String[] meses = {"Ene","Feb","Mar","Abr","May","Jun",
@@ -99,4 +120,6 @@ public class Defines {
     //KeyA  Read:Never  Write:KeyA
     //KeyB  Read:KeyA   Write:KeyA
     //Access Bits:  Read:KeyA   Write:KeyA
+
+    static public final String ProgressCLOSE = "CLOSE_PROGRESSDIALOG";
 }

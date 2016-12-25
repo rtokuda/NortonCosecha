@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0099cc"
+    tools:context="com.winetraces.nortoncosecha.DescargaSD">
+
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:id="@+id/DescargaSDMain"
+        android:layout_alignParentStart="true" />
+
+    <TextClock
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textClock"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textSize="25sp"
+        android:layout_marginTop="55dp"
+        android:layout_marginStart="270dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="330dp"
+        android:layout_height="340dp"
+        android:layout_marginTop="180dp"
+        android:textSize="16sp"
+        android:layout_marginStart="15dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:typeface="monospace"
+        android:id="@+id/detalle" />
+
+    <Button
+        android:layout_width="140dp"
+        android:layout_height="35dp"
+        android:id="@+id/salir"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="110dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:background="@android:color/transparent"
+        android:onClick="salirClick"
+        />
+</RelativeLayout>
+

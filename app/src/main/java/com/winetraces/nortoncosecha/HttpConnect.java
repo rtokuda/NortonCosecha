@@ -1,5 +1,7 @@
 package com.winetraces.nortoncosecha;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -42,6 +44,9 @@ public class HttpConnect implements Runnable
         HttpURLConnection conn = null;
         InputStream is = null;
         boolean flag = false;
+        running = true;
+        error = 0;
+        sWebData = "";
         try {
             URL wURL = new URL(Variables.url);
             conn = (HttpURLConnection) wURL.openConnection();
@@ -72,11 +77,12 @@ public class HttpConnect implements Runnable
             }
         } catch (IOException err) {
             error = 3;
-            //System.out.println("Caught IOException: " + err.toString());
+            Log.d("HTTP ERROR","Caught IOException: " + err.toString());
         } finally {
             if (is != null) {
                 try {
                     is.close();
+                    is = null;
                 } catch (Exception err) {
                     //err.printStackTrace();
                     error = 4;
@@ -85,6 +91,7 @@ public class HttpConnect implements Runnable
             if (conn != null) {
                 try {
                     conn.disconnect();
+                    conn = null;
                 } catch (Exception err) {
                     //err.printStackTrace();
                     error = 5;

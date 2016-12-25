@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Build;
+import android.os.SystemClock;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.text.Spanned;
@@ -314,6 +315,11 @@ public class Library {
             Log.d("Memory ", Where+" Total "+info.totalMemory());
             Log.d("Memory ", Where+" Max "+info.maxMemory());
         }catch (Exception e){}
+    }
+
+    public static void LogTime(String where)
+    {
+        Log.d("Time", System.currentTimeMillis()+"--"+where);
     }
 
     public static void keybeep()

@@ -5,12 +5,17 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -49,7 +54,6 @@ public class About extends AppCompatActivity {
     {
         super.onPostCreate(savedInstanceState);
     }
-
 
     public void salirClick(View target)
     {
@@ -102,4 +106,6 @@ public class About extends AppCompatActivity {
         super.onNewIntent(intent);
         MifareIO.disconnect();
     }
+
 }
+

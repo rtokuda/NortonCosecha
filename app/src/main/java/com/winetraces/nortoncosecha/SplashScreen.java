@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebView;
@@ -46,6 +47,7 @@ public class SplashScreen extends Activity {
                         mHideHandler.removeCallbacks(mHideRunnable);
                         Variables.mainEnable = true;
                         Variables.mifareEnable = true;
+                        Variables.keyEnable = true;
                         onBackPressed();
                         return false;
                     }
@@ -54,6 +56,7 @@ public class SplashScreen extends Activity {
             }
             Variables.mainEnable = true;
             Variables.mifareEnable = true;
+            Variables.keyEnable = true;
             onBackPressed();
         }
     }
@@ -88,6 +91,23 @@ public class SplashScreen extends Activity {
         delayedHide(4000);
     }
 
+    @Override
+    public boolean dispatchKeyEvent (KeyEvent event)
+    {
+        if (event.getAction() == KeyEvent.ACTION_DOWN)
+        {
+            int key = event.getKeyCode();
+            switch(key)
+            {
+                case KeyEvent.KEYCODE_SEARCH:
+                case KeyEvent.KEYCODE_BACK:
+                case KeyEvent.KEYCODE_MENU:
+                    return true;
+            }
+        }
+        return false;
+    }
+
     private void delayedHide(int delayMillis) {
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
@@ -108,6 +128,7 @@ public class SplashScreen extends Activity {
                 return false;
             }
         });
+        Misc.getPresentes();
         PendingIntent pendingIntent = this.createPendingIntent();
         // Enable NFC adapter
         Variables.keyEnable = true;

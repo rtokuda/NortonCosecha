@@ -140,12 +140,7 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
                 break;
             case R.id.b_r_remito:
                 enableGroup(-1);
-                Variables.wProgress = new ProgressDialog(this);
-                Variables.wProgress.setCancelable(false);
-                Variables.wProgress.setMessage("...Un momento");
-                Variables.wProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                Variables.wProgress.setIndeterminate(true);
-                Variables.wProgress.show();
+
                 Variables.PrintType = Defines.RP_REMITO;
                 intent = new Intent(this, Reportes.class);
                 startActivity(intent);
@@ -161,7 +156,11 @@ public class Menu extends AppCompatActivity implements View.OnClickListener {
                 startActivity(intent);
                 break;
             case R.id.b_d_sd:
-                // Save_SD.save(this);
+                enableGroup(-1);
+                intent = new Intent(this, DescargaSD.class);
+                startActivity(intent);
+                //Save_SD.save(this);
+                //Library.alert (this, "Info", "Datos guardados exitosamente", android.R.drawable.ic_dialog_info);
                 break;
         }
     }

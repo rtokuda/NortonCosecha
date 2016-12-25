@@ -10,7 +10,6 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:srcCompat="@drawable/image"
         android:layout_alignParentTop="true"
         android:id="@+id/background"
         android:layout_alignParentStart="true" />
@@ -81,7 +80,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginTop="234dp"
         android:id="@+id/progamaAct"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textColor="@android:color/background_light" />
 
     <TextView
@@ -121,7 +120,7 @@
         android:layout_marginStart="135dp"
         android:layout_alignParentTop="true"
         android:layout_marginTop="419dp"
-        android:id="@+id/programaView"
+        android:id="@+id/cuadrillaView"
         android:textSize="24sp" />
 
     <TextView
@@ -131,7 +130,7 @@
         android:layout_marginStart="135dp"
         android:layout_alignParentTop="true"
         android:layout_marginTop="460dp"
-        android:id="@+id/cuadrillaView"
+        android:id="@+id/unidadView"
         android:textSize="24sp" />
 
     <TextView

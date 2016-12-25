@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.RelativeSizeSpan;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -34,7 +35,6 @@ public class Presentismo extends AppCompatActivity {
     String _legajo;
     String _cosechador;
     byte[] _legajoAbreviado = new byte[2];
-    int WaitTime;
     String _fecha;
 
     @Override
@@ -63,6 +63,7 @@ public class Presentismo extends AppCompatActivity {
     protected void onPostCreate(Bundle savedInstanceState)
     {
         super.onPostCreate(savedInstanceState);
+        Misc.getPresentes();
         vPresentes.setText(""+Variables.Presentes);
     }
 
@@ -125,13 +126,15 @@ public class Presentismo extends AppCompatActivity {
 
         Calendar Fecha = Library.Fecha(horaAnt*1000L);
         if (horaAnt == 0)
-            _fecha = "00/00";
+            _fecha = "00/00 00:00";
         else
             _fecha = Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH), 2)+"/"+
-                    Library.padNum(Fecha.get(Calendar.MONTH)+1, 2);
+                    Library.padNum(Fecha.get(Calendar.MONTH)+1, 2)+" "+
+                    Library.padNum(Fecha.get(Calendar.HOUR_OF_DAY), 2)+":"+
+                    Library.padNum(Fecha.get(Calendar.MINUTE), 2);
         byte[] L = new byte[6];
         Library.byteArrayCopy(Legajo, 0, L, 0);
-        _legajo = new String(L).toString();
+        _legajo = new String(L);
         _cosechador = Library.String(Cosechador);
         _legajoAbreviado[0] = Legajo[6];
         _legajoAbreviado[1] = Legajo[7];
@@ -149,53 +152,47 @@ public class Presentismo extends AppCompatActivity {
             Variables.Presentes++;
             Misc.SaveConfig();
             RecordStore record = null;
-            try {
-                byte[] datos = new byte [22];
-                record = RecordStore.openRecordStore("Presente", true, Defines.OPEN_WRITE);
-                datos[0]=_legajoAbreviado[0];
-                datos[1]=_legajoAbreviado[1];
-                Library.toIntelDataInt(horaAct, datos, 2);
-                Library.byteArrayCopy(Cosechador, 0, datos, 6);
-                record.addRecord(datos, 0, 22);
-                record.closeRecordStore();
 
-                String fname = "NLOG"+Integer.toString(Fecha.get(Calendar.YEAR))+
-                        Library.padNum(Fecha.get(Calendar.MONTH)+1, 2)+
-                        Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH), 2);
-                record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
+            byte[] datos = new byte [22];
+            record = RecordStore.openRecordStore("Presente", true, Defines.OPEN_WRITE);
+            datos[0]=_legajoAbreviado[0];
+            datos[1]=_legajoAbreviado[1];
+            Library.toIntelDataInt(horaAct, datos, 2);
+            Library.byteArrayCopy(Cosechador, 0, datos, 6);
+            record.addRecord(datos, 0, 22);
+            record.closeRecordStore();
 
-                datos = new byte [11];
-                datos[0] = 1;
+            String fname = "NLOG"+Integer.toString(Fecha.get(Calendar.YEAR))+
+                    Library.padNum(Fecha.get(Calendar.MONTH)+1, 2)+
+                    Library.padNum(Fecha.get(Calendar.DAY_OF_MONTH), 2);
+            record = RecordStore.openRecordStore(fname, true, Defines.OPEN_WRITE);
 
-                byte[] aux = new byte[4];
-                Library.toIntelDataInt(Variables.DeviceID, aux, 0);
-                aux = Library.arrayInvert(aux);
-                Library.byteArrayCopy(aux, 0, datos, 1);
+            datos = new byte [11];
+            datos[0] = 1;
 
-                datos[5]=_legajoAbreviado[0];
-                datos[6]=_legajoAbreviado[1];
+            byte[] aux = new byte[4];
+            Library.toIntelDataInt(Variables.DeviceID, aux, 0);
+            aux = Library.arrayInvert(aux);
+            Library.byteArrayCopy(aux, 0, datos, 1);
 
-                Library.toIntelDataInt(Misc.GetClock(), aux, 0);
-                aux = Library.arrayInvert(aux);
-                Library.byteArrayCopy(aux, 0, datos, 7);
-                record.addRecord(datos, 0, 11);
-                record.closeRecordStore();
+            datos[5]=_legajoAbreviado[0];
+            datos[6]=_legajoAbreviado[1];
 
-            }catch(Exception e){
-                try {
-                    if (record != null)
-                        record.closeRecordStore();
-                }catch (Exception ee){}
-            }
+            Library.toIntelDataInt(Misc.GetClock(), aux, 0);
+            aux = Library.arrayInvert(aux);
+            Library.byteArrayCopy(aux, 0, datos, 7);
+            record.addRecord(datos, 0, 11);
+            record.closeRecordStore();
         }
-        WaitTime = 30;
+        if (_cantidad == 0)
+            _fecha = "00/00 00:00";
         return true;
     }
 
 
     void refreshScreen()
     {
-        String s = "Legajo: "+_legajo+"\n\r"+"Tachos/Cajas actual: "+_cantidad+"\n\r";
+        String s = "Legajo: "+_legajo+"\n\r"+"Tachos/Cajas hoy: "+_cantidad+"\n\r";
         s = s+"Total temporada: "+_total+"\n\r"+"Ultimo registro: "+_fecha+"\n\r";
         vPresentes.setText(""+Variables.Presentes);
         vCosechador.setText(_cosechador);

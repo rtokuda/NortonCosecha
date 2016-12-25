@@ -1,147 +1,144 @@
 package com.winetraces.nortoncosecha;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.winetraces.recordstore.RecordStore;
+
+import java.util.Calendar;
 
 /**
  * Created by nestor on 02/12/2016.
  */
 
 public class Misc {
-    public static void SetPrograma(Context context)
+    public static void GetConfig(Context context)
     {
         int x,i;
         RecordStore record;
 
-        try {
-            record = RecordStore.openRecordStore("Config", true, Defines.OPEN_READ);
-            x = record.getNumRecords();
-            byte[] datos = new byte[300];
-            if (x!=0)
-                datos = record.getRecord(1);
-            record.closeRecordStore();
-            byte c[]=new byte[10];
-            Library.byteArrayCopy(datos, 31, c, 0);
-            Variables.Cuadrilla = new String(c);
-            if ((x == 0) || (datos[11] != Defines.CONFIG_VERSION))
-            {
-                RecordStore.initializeRecordStore(context, true);
-                Variables.ProgInx = 0;
-                Variables.DiffTime = Defines.COSECHADOR_TIMEOUT;
-                Variables.FechaProg = 0;
+        record = RecordStore.openRecordStore("Config", true, Defines.OPEN_READ);
+        x = record.getNumRecords();
+        byte[] datos = new byte[300];
+        if (x!=0)
+            datos = record.getRecord(1);
+        record.closeRecordStore();
+        byte c[]=new byte[10];
+        Library.byteArrayCopy(datos, 31, c, 0);
+        Variables.Cuadrilla = new String(c);
+        if ((x == 0) || (datos[11] != Defines.CONFIG_VERSION))
+        {
+            RecordStore.initializeRecordStore(context, Defines.DELETE_ALL);
+            Variables.ProgInx = 0;
+            Variables.WaitCardTime = Defines.COSECHADOR_TIMEOUT;
+            Variables.FechaProg = 0;
+            Variables.DiffClock = 0;
+            Variables.Presentes = 0;
+            Variables.ModoCosecha = 0;
+            Variables.TachoCajaCnt = 0;
+            Variables.TotalTachos = 0;
+            Variables.Tachos4Bin = 16;
+            Variables.Bin4Camion = 24;
+            Variables.Cajas4Pallet = 32;
+            Variables.Pallet4Camion = 10;
+            Variables.AlarmTimeOut = 5000;
+            Variables.BinCnt = 1;
+            Variables.CamionCnt = 0;
+            Variables.logInx = 0;
+            Variables.Viaje = 0;
+            Variables.RemitoInx = 0;
+            Variables.Cuadrilla = "NINGUNO   ";
+            Variables.ProgSel = false;
+            Variables.sPrinterURL = "192.168.43.23";
+            //Variables.sWebServiceURL = "norton.fundacionadabyron.org";
+            Variables.sWebServiceURL = "appvendimia.norton.com.ar";
+            Variables.sMailAddr = "";
+            SaveConfig();
+        }
+        else
+        {
+            Variables.ProgInx = datos[0];
+            Variables.WaitCardTime = Library.fromIntelDataWord(datos, 1);
+            Variables.FechaProg = Library.fromIntelDataWord(datos, 3);
+            Variables.DiffClock = Library.fromIntelDataIntLE(datos, 5);
+            if (Variables.DiffClock > 86400)
                 Variables.DiffClock = 0;
-                Variables.Presentes = 0;
-                Variables.ModoCosecha = 0;
-                Variables.TachoCajaCnt = 0;
-                Variables.TotalTachos = 0;
-                Variables.Tachos4Bin = 16;
-                Variables.Bin4Camion = 24;
-                Variables.Cajas4Pallet = 32;
-                Variables.Pallet4Camion = 10;
-                Variables.AlarmTimeOut = 5000;
-                Variables.BinCnt = 1;
-                Variables.CamionCnt = 0;
-                Variables.logInx = 0;
-                Variables.Viaje = 0;
-                Variables.RemitoInx = 0;
-                Variables.Cuadrilla = "NINGUNO   ";
-                Variables.ProgSel = false;
-                //Variables.sWiFiURL = "192.168.0." + (Variables.DeviceID & 255);
-                Variables.sWiFiURL = "192.168.0.32";
-                Variables.sWebServiceURL = "norton.fundacionadabyron.org";
-                //Variables.sWebServiceURL = "192.168.50.9";
-                //Variables.sWebServiceURL = "192.185.17.39";
+            //Calendar rightNow = Calendar.getInstance();
+            //Variables.DiffClock = (rightNow.get(Calendar.ZONE_OFFSET) + rightNow.get(Calendar.DST_OFFSET))/1000;
+
+            Variables.Presentes = Library.fromIntelDataWord(datos, 9);
+            Variables.ProgSel = (datos[12]==0)?false:true;
+            Variables.Tachos4Bin = Library.fromIntelDataWord(datos, 13);
+            Variables.Bin4Camion = Library.fromIntelDataWord(datos, 15);
+            Variables.TachoCajaCnt = Library.fromIntelDataWord(datos, 17);
+            Variables.BinCnt = Library.fromIntelDataWord(datos, 19);
+            Variables.CamionCnt = Library.fromIntelDataWord(datos, 21);
+            Variables.TotalTachos = Library.fromIntelDataWord(datos, 23);
+            Variables.Cajas4Pallet = Library.fromIntelDataWord(datos, 25);
+            Variables.Pallet4Camion = Library.fromIntelDataWord(datos, 27);
+            Variables.AlarmTimeOut = Library.fromIntelDataWord(datos, 29);
+            Variables.logInx = datos[41];
+            Variables.Viaje = datos[42];
+            Variables.RemitoInx = datos[43];
+            x = datos[100];
+            byte[]aux = new byte[x];
+            for(i=0; i<x; i++)
+                aux[i]=datos[101+i];
+            Variables.sPrinterURL = new String(aux);
+            x = datos[150];
+            aux = new byte[x];
+            for(i=0; i<x; i++)
+                aux[i]=datos[151+i];
+            Variables.sWebServiceURL = new String(aux);
+            x = datos[200];
+            if (x == 0)
                 Variables.sMailAddr = "";
-                SaveConfig();
-            }
             else
             {
-                Variables.ProgInx = datos[0];
-                Variables.DiffTime = Library.fromIntelDataWord(datos, 1);
-                Variables.FechaProg = Library.fromIntelDataWord(datos, 3);
-                Variables.DiffClock = Library.fromIntelDataIntLE(datos, 5);
-                if (Variables.DiffClock > 86400)
-                    Variables.DiffClock = 0;
-                Variables.Presentes = Library.fromIntelDataWord(datos, 9);
-                Variables.ProgSel = (datos[12]==0)?false:true;
-                Variables.Tachos4Bin = Library.fromIntelDataWord(datos, 13);
-                Variables.Bin4Camion = Library.fromIntelDataWord(datos, 15);
-                Variables.TachoCajaCnt = Library.fromIntelDataWord(datos, 17);
-                Variables.BinCnt = Library.fromIntelDataWord(datos, 19);
-                Variables.CamionCnt = Library.fromIntelDataWord(datos, 21);
-                Variables.TotalTachos = Library.fromIntelDataWord(datos, 23);
-                Variables.Cajas4Pallet = Library.fromIntelDataWord(datos, 25);
-                Variables.Pallet4Camion = Library.fromIntelDataWord(datos, 27);
-                Variables.AlarmTimeOut = Library.fromIntelDataWord(datos, 29);
-                Variables.logInx = datos[41];
-                Variables.Viaje = datos[42];
-                Variables.RemitoInx = datos[43];
-                x = datos[100];
-                byte[]aux = new byte[x];
-                for(i=0; i<x; i++)
-                    aux[i]=datos[101+i];
-                Variables.sWiFiURL = new String(aux);
-                x = datos[150];
                 aux = new byte[x];
                 for(i=0; i<x; i++)
-                    aux[i]=datos[151+i];
-                Variables.sWebServiceURL = new String(aux);
-                x = datos[200];
-                if (x == 0)
-                    Variables.sMailAddr = "";
-                else
-                {
-                    aux = new byte[x];
-                    for(i=0; i<x; i++)
-                        aux[i]=datos[201+i];
-                    Variables.sMailAddr = new String(aux);
-                }
+                    aux[i]=datos[201+i];
+                Variables.sMailAddr = new String(aux);
             }
-            int horaAct = GetClock() / 86400;
-            if (Variables.FechaProg != horaAct)
-            {
-                ResetConfig();
-            }
-            if (Variables.ProgSel)
-            {
-                try {
-                    record = RecordStore.openRecordStore("Programas", true, Defines.OPEN_READ);
-                    int cnt = record.getNumRecords();
-                    if (Variables.ProgInx >= cnt)
-                        Variables.ProgInx = 0;
-                    datos = record.getRecord(Variables.ProgInx+1);
-                    String tx[] = new String [10];
-                    splitPrograma(datos, tx);
-                    Variables.ProgID = tx[0];
-                    Variables.Finca = tx[2];
-                    Variables.Cuartel = tx[3];
-                    Variables.Area = tx[4];
-                    Variables.CuadrillaPrg = tx[5];
-                    Variables.Programa = tx[7];
-                    Variables.ModoCosecha = Integer.parseInt(tx[8]);
-                    Variables.VariedadUva = tx[9];
-                    if (Variables.ModoCosecha == 1)
-                        Variables.Programa+="-CAJAS";
-                    else
-                        Variables.Programa+="-BINES";
-
-                }catch (Exception e){};
-                try {
-                    record.closeRecordStore();
-                }catch (Exception e){};
-            }
+        }
+        int horaAct = GetClock() / 86400;
+        if (Variables.FechaProg != horaAct)
+        {
+            ResetConfig();
+        }
+        if (Variables.ProgSel)
+        {
+            record = RecordStore.openRecordStore("Programas", true, Defines.OPEN_READ);
+            int cnt = record.getNumRecords();
+            if (Variables.ProgInx >= cnt)
+                Variables.ProgInx = 0;
+            datos = record.getRecord(Variables.ProgInx+1);
+            String tx[] = new String [20];
+            splitProgramas(datos, tx);
+            Variables.ProgID = tx[0];
+            Variables.Finca = tx[2];
+            Variables.Cuartel = tx[3];
+            Variables.Area = tx[4];
+            Variables.CuadrillaPrg = tx[5];
+            Variables.Programa = tx[7];
+            Variables.ModoCosecha = Integer.parseInt(tx[8]);
+            Variables.VariedadUva = tx[9];
+            if (Variables.ModoCosecha == 1)
+                Variables.Programa+="-CAJAS";
             else
-            {
-                Variables.Finca = "Ninguno";
-                Variables.Cuartel = "0001";
-                Variables.Area = "Ninguno";
-                Variables.CuadrillaPrg = "Ninguno";
-                Variables.Programa = "NO DEFINIDO";
-                Variables.ModoCosecha = 0;
-                Variables.VariedadUva = "Generico";
-            }
-        }catch(Exception e){}
+                Variables.Programa+="-TACHOS";
+            record.closeRecordStore();
+        }
+        else
+        {
+            Variables.Finca = "Ninguno";
+            Variables.Cuartel = "0001";
+            Variables.Area = "Ninguno";
+            Variables.CuadrillaPrg = "Ninguno";
+            Variables.Programa = "NO DEFINIDO";
+            Variables.ModoCosecha = 0;
+            Variables.VariedadUva = "Generico";
+        }
         Variables.Cosechador_name = " ";
         Variables.Cosechador_count= " ";
         Variables.Cosechador_legajo = " ";
@@ -163,9 +160,7 @@ public class Misc {
         else
             Variables.logInx = 0;
         String fname = "RECORD"+Integer.toString(Variables.logInx);
-        try {
-            RecordStore.deleteRecordStore(fname);
-        }catch (Exception e){}
+        RecordStore.deleteRecordStore(fname);
         Variables.Viaje = 0;
         SaveConfig();
     }
@@ -176,8 +171,8 @@ public class Misc {
         int i;
 
         datos[0] = Variables.ProgInx;
-        datos[1] = (byte)(Variables.DiffTime & 255);
-        datos[2] = (byte)(Variables.DiffTime / 256);
+        datos[1] = (byte)(Variables.WaitCardTime & 255);
+        datos[2] = (byte)(Variables.WaitCardTime / 256);
         datos[3] = (byte)(Variables.FechaProg & 255);
         datos[4] = (byte)(Variables.FechaProg / 256);
         Library.toIntelDataInt(Variables.DiffClock, datos, 5);
@@ -211,7 +206,7 @@ public class Misc {
         datos[42] = (byte)Variables.Viaje;
         datos[43] = (byte)Variables.RemitoInx;
 
-        byte[]aux = Variables.sWiFiURL.getBytes();
+        byte[]aux = Variables.sPrinterURL.getBytes();
         datos[100] = (byte)aux.length;
         for (i=0; i<aux.length; i++)
         {
@@ -240,14 +235,12 @@ public class Misc {
         }
         else
             datos[200]=0;
-        try {
-            RecordStore record = RecordStore.openRecordStore("Config", true, Defines.OPEN_WRITE);
-            if (record.getNumRecords() == 0)
-                record.addRecord(datos, 0, 300);
-            else
-                record.setRecord(1, datos, 0, 300);
-            record.closeRecordStore();
-        }catch(Exception e){}
+        RecordStore record = RecordStore.openRecordStore("Config", true, Defines.OPEN_WRITE);
+        if (record.getNumRecords() == 0)
+            record.addRecord(datos, 0, 300);
+        else
+            record.setRecord(1, datos, 0, 300);
+        record.closeRecordStore();
     }
 
 
@@ -257,38 +250,35 @@ public class Misc {
         RecordStore record;
 
         String progDef[][]={
-                {"0000AA", "NORTON  ", "0001", "NINGUNO ", "Generica", "  1", "0", "Generica"},
-                {"0000BB", "NORTON  ", "0002", "NINGUNO ", "Generica", "  1", "0", "Generica"},
-                {"0000CC", "NORTON  ", "0003", "NINGUNO ", "Generica", "  1", "0", "Generica"},
-                {"0000DD", "NORTON  ", "0004", "NINGUNO ", "Generica", "  1", "1", "Generica"},
-                {"0000EE", "NORTON  ", "0005", "NINGUNO ", "Generica", "  1", "1", "Generica"},
-                {"0000FF", "NORTON  ", "0006", "NINGUNO ", "Generica", "  1", "1", "Generica"},
+                {"0000AA", "NORTON  ", "0001", "NINGUNO ", "Generica", "  1", "0", "Generica", "Generica"},
+                {"0000BB", "NORTON  ", "0002", "NINGUNO ", "Generica", "  1", "0", "Generica", "Generica"},
+                {"0000CC", "NORTON  ", "0003", "NINGUNO ", "Generica", "  1", "0", "Generica", "Generica"},
+                {"0000DD", "NORTON  ", "0004", "NINGUNO ", "Generica", "  1", "1", "Generica", "Generica"},
+                {"0000EE", "NORTON  ", "0005", "NINGUNO ", "Generica", "  1", "1", "Generica", "Generica"},
+                {"0000FF", "NORTON  ", "0006", "NINGUNO ", "Generica", "  1", "1", "Generica", "Generica"},
         };
 
-        try {
-            RecordStore.deleteRecordStore("Programas");
-            RecordStore.deleteRecordStore("CamionReg");
-        }catch(Exception e){}
-        try {
-            record = RecordStore.openRecordStore("Programas", true, Defines.OPEN_WRITE);
-            for (i=0; i<6; i++)
+        RecordStore.deleteRecordStore("Programas");
+        RecordStore.deleteRecordStore("CamionReg");
+        record = RecordStore.openRecordStore("Programas", true, Defines.OPEN_WRITE);
+        for (i=0; i<6; i++)
+        {
+            int x = 0;
+            byte[] datos = new byte[Defines.PRG_LEN];
+            for (j=0; j<9; j++)
             {
-                int x = 0;
-                byte[] datos = new byte[Defines.PRG_LEN];
-                for (j=0; j<8; j++)
-                {
-                    byte aux[] = progDef[i][j].getBytes();
-                    Library.byteArrayCopy(aux, 0, datos, x);
-                    x += progDef[i][j].length();
-                }
-                record.addRecord(datos, 0, Defines.PRG_LEN);
+                byte aux[] = progDef[i][j].getBytes();
+                Library.byteArrayCopy(aux, 0, datos, x);
+                x += progDef[i][j].length();
             }
-            record.closeRecordStore();
-        }catch (Exception e){}
+            record.addRecord(datos, 0, Defines.PRG_LEN);
+        }
+        record.closeRecordStore();
         Variables.Finca = "Ninguno";
         Variables.Cuartel = "0001";
         Variables.ModoCosecha = 0;
         Variables.CuadrillaPrg = "Ninguno";
+        Variables.Unidad = "Ninguno";
         Variables.Programa = "NO DEFINIDO";
         Variables.Area = "Ninguno";
         Variables.VariedadUva = "Generica";
@@ -300,14 +290,15 @@ public class Misc {
         Variables.CosechadorLastTime = -1;
     }
 
-    public static void splitPrograma(byte[] datos, String txt[])
+    public static void splitProgramas(byte[] datos, String txt[])
     {
         byte prog[]= new byte[6];
         boolean flag = false;
 
         Library.byteArrayCopy(datos, prog);
         String s = new String(prog);
-        txt[0] = s;
+
+        txt[Defines.PRG_NAME] = s;
         switch (s) {
             case "0000AA":
                 s = "1er CUARTEL";
@@ -332,37 +323,42 @@ public class Misc {
                 s = "PRG"+s;
                 break;
         }
-        txt[1] = s;
+        txt[Defines.PRG_NAME_COMPLETE] = s;
+        String ss = new String(datos);
 
         byte Finca[] = new byte[8];
         Library.byteArrayCopy(datos, 6, Finca, 0);
-        txt[2] = new String(Finca);
+        txt[Defines.PRG_FINCA] = new String(Finca);
         byte cuartel[] = new byte[4];
         Library.byteArrayCopy(datos, 14, cuartel, 0);
-        txt[3] = new String(cuartel);
+        txt[Defines.PRG_CUARTEL] = new String(cuartel);
         if (flag)
-            txt[7]=txt[2]+"-"+txt[3];
+            txt[Defines.PRG_TITLE]=txt[Defines.PRG_FINCA]+"-"+txt[Defines.PRG_CUARTEL];
         else
-            txt[7]=s;
+            txt[Defines.PRG_TITLE]=txt[Defines.PRG_NAME_COMPLETE];
         byte area[] = new byte[8];
         Library.byteArrayCopy(datos, 18, area, 0);
-        txt[4] = new String(area);
+        txt[Defines.PRG_AREA] = new String(area);
         byte CuadrillaPrg[]=new byte[8];
         Library.byteArrayCopy(datos, 26, CuadrillaPrg, 0);
-        txt[5] = new String(CuadrillaPrg);
+        txt[Defines.PRG_CUADRILLA] = new String(CuadrillaPrg);
         byte cantidad[]=new byte[3];
         Library.byteArrayCopy(datos, 34, cantidad, 0);
-        txt[6] = new String(cantidad);
+        txt[Defines.PRG_CANTIDAD] = new String(cantidad);
         byte modoCosecha[]=new byte[1];
         Library.byteArrayCopy(datos, 37, modoCosecha, 0);
-        txt[8] = new String(modoCosecha);
+        txt[Defines.PRG_MODO_COSECHA] = new String(modoCosecha);
         if (modoCosecha[0]== '1')
-            txt[1]+="-CAJAS";
+            txt[Defines.PRG_NAME_COMPLETE]+="-CAJAS";
         else
-            txt[1]+="-BINES";
+            txt[Defines.PRG_NAME_COMPLETE]+="-TACHOS";
         byte variedadUva[]=new byte[8];
         Library.byteArrayCopy(datos, 38, variedadUva, 0);
-        txt[9] = new String(variedadUva);
+        txt[Defines.PRG_VARIEDAD] = new String(variedadUva);
+        byte Unidad[] = new byte[8];
+        Library.byteArrayCopy(datos, 46, Unidad, 0);
+        txt[Defines.PRG_UNIDAD] = new String(Unidad);
+        txt[11] = "";
     }
 
     public static int GetClock()
@@ -370,4 +366,28 @@ public class Misc {
         return (int)(System.currentTimeMillis()/1000)+Variables.DiffClock;
     }
 
+    public static void getPresentes()
+    {
+       String datos;
+       int diaAct = GetClock()/86400;
+
+        RecordStore record = RecordStore.openRecordStoreBuffered("Presente", Defines.OPEN_TEXT);
+        int cnt = record.getNumRecords();
+        Variables.Presentes = 0;
+        String hex;
+        for (int i=0; i<cnt; i++)
+        {
+            datos = record.getBuffSRecord(i);
+
+            if (datos != null) {
+                hex ="";
+                for (int j=10; j>2; j-=2)
+                    hex += datos.substring(j,j+2);
+                int dd = Integer.valueOf(hex, 16).intValue()/86400;
+                if (diaAct == dd )
+                    Variables.Presentes++;
+            }
+        }
+        record.closeRecordStore();
+    }
 }
